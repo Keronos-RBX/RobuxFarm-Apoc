@@ -1201,7 +1201,7 @@ local function getObjGen()
             Gui.UIPadding_5.PaddingLeft = UDim.new(0, 4)
             Gui.UIPadding_5.PaddingRight = UDim.new(0, 4)
 
-            Gui.MainContainer.Name = "Window"
+            Gui.MainContainer.Name = "MainContainer"
             Gui.MainContainer.Parent = Gui.Objects
             Gui.MainContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Gui.MainContainer.BackgroundTransparency = 1.000
@@ -3228,7 +3228,7 @@ local TI = TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.
 
 -->> setup UILib table
 local UILibNames = {
-    "Window",
+    "MainContainer",
     "Category",
     "Button",
     "Section"
@@ -3289,15 +3289,15 @@ function UILibrary.new(gameName, userId, rank)
         gameName = gameName,
         userId = userId,
         rank = rank,
-    }, UILibrary.Window)
+    }, UILibrary.MainContainer)
 end
 
 
-function UILibrary.Window:setAnimSpeed(val)
+function UILibrary.MainContainer:setAnimSpeed(val)
     TI = TweenInfo.new(.4 / (val / 100), Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 end
 
-function UILibrary.Window:Notification(sett)
+function UILibrary.MainContainer:Notification(sett)
     local Notif = objectGenerator.new("Notification").Main
 
     Notif.Size = UDim2.new(1, 0, 1, -5)
@@ -3463,7 +3463,7 @@ function UILibrary.Window:Notification(sett)
     )
 end
 
-function UILibrary.Window:Prompt(sett)
+function UILibrary.MainContainer:Prompt(sett)
     local Notif = objectGenerator.new("Prompt").Main
 
     Notif.Size = UDim2.new(1, 0, 1, -5)
@@ -3693,7 +3693,7 @@ function UILibrary.Window:Prompt(sett)
     return selection
 end
 
-function UILibrary.Window:ChangeCategory(new)
+function UILibrary.MainContainer:ChangeCategory(new)
     local catFolder = self.MainUI.MainUI.Sidebar.ContentHolder.Cheats.CheatHolder
     local Object = catFolder:FindFirstChild(new)
 
@@ -3781,7 +3781,7 @@ function UILibrary.Window:ChangeCategory(new)
     end
 end
 
-function UILibrary.Window:ChangeCategorySelection(name)
+function UILibrary.MainContainer:ChangeCategorySelection(name)
     local catFolder = self.MainUI.MainUI.Sidebar.Sidebar2[self.currentSelection.Name].Bar2Holder
     local Object = catFolder:FindFirstChild(name)
 
@@ -3877,7 +3877,7 @@ function UILibrary.Window:ChangeCategorySelection(name)
     end
 end
 
-function UILibrary.Window:Category(name, icon)
+function UILibrary.MainContainer:Category(name, icon)
     local catFolder = self.MainUI.MainUI.Sidebar.ContentHolder.Cheats.CheatHolder
     local category = objectGenerator.new("Category")
 
@@ -5168,7 +5168,7 @@ function UILibrary.Section:Slider(sett, callback)
     return meta
 end
 
-function UILibrary.Window:ToggleMinimize()
+function UILibrary.MainContainer:ToggleMinimize()
     self.doMinimize(not self.minimized)
 end
 
