@@ -3271,6 +3271,46 @@ function UILibrary.new(gameName, userId, rank)
     local userinfo = window.MainUI.Sidebar.ContentHolder.UserInfo.Content
     userinfo.Rank.Text = rank
     userinfo.Title.Text = userId
+    --//close/minimize buttons
+    do
+        local closeButton = Instance.new("ImageButton")
+        closeButton.Name = "CloseButton"
+        closeButton.Image = "rbxassetid://7072725342"
+        closeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+        closeButton.Size = UDim2.new(0, 20, 0, 20)
+        closeButton.Position = UDim2.new(1, -25, 0, 5)
+        closeButton.ZIndex = 300
+        closeButton.BackgroundTransparency = 1
+        closeButton.Parent = window.MainUI
+
+        local minimizeButton = Instance.new("ImageButton")
+        minimizeButton.Name = "MinimizeButton"
+        minimizeButton.Image = "rbxassetid://7072706663"
+        minimizeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+        minimizeButton.Size = UDim2.new(0, 20, 0, 20)
+        minimizeButton.Position = UDim2.new(1, -50, 0, 5)
+        minimizeButton.ZIndex = 300
+        minimizeButton.BackgroundTransparency = 1
+        minimizeButton.Parent = window.MainUI
+
+        -- Close button: hide UI
+        closeButton.MouseButton1Click:Connect(function()
+            window.MainUI.Visible = false
+        end)
+
+        -- Minimize button: toggle between normal size and just a small bar
+        local minimized = false
+        local originalSize = window.MainUI.Size
+        minimizeButton.MouseButton1Click:Connect(function()
+            minimized = not minimized
+            if minimized then
+                -- reduce to a small top bar
+                window.MainUI.Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40)
+            else
+                window.MainUI.Size = originalSize
+            end
+        end)
+    end
 
     return setmetatable(
         {
