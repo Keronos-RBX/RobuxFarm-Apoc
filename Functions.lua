@@ -1,6 +1,4 @@
 --// Functions.lua
--- INFINITE YIELD–STYLE FLY + NOCLIP TOGGLE (FIXED so no extra toggles are needed)
--- Also includes the other functions (TP, ragdoll, damage, etc.)
 
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
