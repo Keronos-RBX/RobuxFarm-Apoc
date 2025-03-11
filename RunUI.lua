@@ -1,5 +1,5 @@
 --// RunUI.lua
-print("Loading v1.01 of the .kero UI")
+print("Running v1.01 of the .kero UI | patch 0.001")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
