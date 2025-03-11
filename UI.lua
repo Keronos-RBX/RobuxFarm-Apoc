@@ -1,6 +1,6 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 print("Loading v1.01 of ui lib - Keronos")
-print("This is patch 0.006 of the Ui Lib")
+print("This is patch 0.007 of the Ui Lib")
 
 local UILibrary = {}
 --// Modules
@@ -3299,7 +3299,6 @@ function UILibrary.new(gameName, userId, rank)
 
     -- Return a table so "Window" is the metatable
     return setmetatable({
-        MainFrame = mainFrame,
         MainUI = mainFrame,
         minimized = minimized,
         doMinimize = doMinimize,
