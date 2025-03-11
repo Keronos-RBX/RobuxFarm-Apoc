@@ -1,4 +1,4 @@
---All creds for this ui lib go to Hydra UI Lib.
+--(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 
 local UILibrary = {}
 --// Modules
