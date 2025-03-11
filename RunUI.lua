@@ -22,12 +22,12 @@ end
 local Functions = getgenv().ApocFunctions or {}
 if not next(Functions) then
     -- If it's empty, require the Functions now:
-    Functions = loadstring(game:HttpGet('https://pastebin.com/raw/...Functions.lua'))() 
+    Functions = loadstring(game:HttpGet('https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua'))() 
     -- ^ Use your real URL or local require
 end
 
 -- 3) Load the UI library
-local UILib = loadstring(game:HttpGet('https://pastebin.com/raw/...UI.lua'))()
+local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua'))()
 -- ^ again, replace with your actual raw script link or local require
 
 -- 4) Create the main window
