@@ -3238,35 +3238,32 @@ for i, v in pairs(UILibNames) do
 end
 
 function UILibrary.new(gameName, userId, rank)
-    -- Create a named ScreenGui so we can find it easily
     local GUI = Instance.new("ScreenGui")
     GUI.Name = "HydraUILib"
-    GUI.Parent = game:GetService("CoreGui")  -- or PlayerGui
+    GUI.Parent = game:GetService("CoreGui")
     GUI.ResetOnSpawn = false
     GUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-    -- Build the main window object
-    local window = objectGenerator.new("Window")
-    window.Parent = GUI
+    local windowObject = objectGenerator.new("Window")
+    windowObject.Parent = GUI
 
-    -- Make it draggable by the logo or whichever portion
+    -- Make it draggable from the logo
     local dragFrame = Instance.new("Frame")
     dragFrame.BackgroundTransparency = 1
-    dragFrame.Size = UDim2.fromScale(2, 2)
-    dragFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    dragFrame.Position = UDim2.fromScale(0.5, 0.5)
-    dragFrame.Parent = window.MainUI.Sidebar.ContentHolder.Cheats.Logo
+    dragFrame.Size = UDim2.fromScale(2,2)
+    dragFrame.AnchorPoint = Vector2.new(0.5,0.5)
+    dragFrame.Position = UDim2.fromScale(0.5,0.5)
+    dragFrame.Parent = windowObject.MainUI.Sidebar.ContentHolder.Cheats.Logo
+    local dragApi = Draggable.Drag(windowObject.MainUI, dragFrame)
 
-    local DraggableAPI = Draggable.Drag(window.MainUI, dragFrame)
-
-    -- Basic watermark or user info
-    window.Watermark.Text = ("RobuxFarm.Kero | %s | %s"):format(userId, gameName)
-    local userinfo = window.MainUI.Sidebar.ContentHolder.UserInfo.Content
+    -- Watermark, user info
+    windowObject.Watermark.Text = ("RobuxFarm.Kero | %s | %s"):format(userId, gameName)
+    local userinfo = windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Content
     userinfo.Rank.Text = rank
     userinfo.Title.Text = tostring(userId)
 
     -- Add the close & minimize
-    local closeButton = Instance.new("ImageButton")
+     local closeButton = Instance.new("ImageButton")
     closeButton.Name = "CloseButton"
     closeButton.Image = "rbxassetid://7072725342"
     closeButton.ImageColor3 = Color3.fromRGB(200,200,200)
@@ -3274,7 +3271,7 @@ function UILibrary.new(gameName, userId, rank)
     closeButton.Position = UDim2.new(1, -25, 0, 5)
     closeButton.ZIndex = 300
     closeButton.BackgroundTransparency = 1
-    closeButton.Parent = window.MainUI
+    closeButton.Parent = windowObject.MainUI
 
     local minimizeButton = Instance.new("ImageButton")
     minimizeButton.Name = "MinimizeButton"
@@ -3284,32 +3281,27 @@ function UILibrary.new(gameName, userId, rank)
     minimizeButton.Position = UDim2.new(1, -50, 0, 5)
     minimizeButton.ZIndex = 300
     minimizeButton.BackgroundTransparency = 1
-    minimizeButton.Parent = window.MainUI
+    minimizeButton.Parent = windowObject.MainUI
 
     local minimized = false
-    local originalPos = window.MainUI.Position
-    local originalSize = window.MainUI.Size
+    local originalPos = windowObject.MainUI.Position
+    local originalSize = windowObject.MainUI.Size
 
-    minimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
+    local function doMinimize(newState)
+        minimized = newState
         if minimized then
-            -- Move to top-left
-            window.MainUI.Position = UDim2.fromOffset(0.7, 0.2)
-            -- A smaller size that basically shows only the sidebar’s width & a short height
-            window.MainUI.Size = UDim2.new(0, 220, 0, 60)
-
-            -- Hide the main content except the logo or whatever you want
-            -- The easiest is to hide the entire "Content" frame and user info
-            if window.MainUI.Content then
-                window.MainUI.Content.Visible = false
+            -- top-left, small size
+            windowObject.MainUI.Position = UDim2.fromOffset(0, 0)
+            windowObject.MainUI.Size = UDim2.new(0,220, 0,60)
+            -- hide main content except the logo
+            if windowObject.MainUI.Content then
+                windowObject.MainUI.Content.Visible = false
             end
-            if window.MainUI.Sidebar.ContentHolder.UserInfo then
-                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = false
+            if windowObject.MainUI.Sidebar.ContentHolder.UserInfo then
+                windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Visible = false
             end
-            if window.MainUI.Sidebar.ContentHolder.Cheats then
-                -- We want to show only the logo, so let's hide sub-objects except the logo
-                -- But "Logo" is a child of "Cheats", so let's do:
-                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+            if windowObject.MainUI.Sidebar.ContentHolder.Cheats then
+                for _, child in pairs(windowObject.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
                     if child.Name ~= "Logo" then
                         child.Visible = false
                     end
@@ -3317,50 +3309,57 @@ function UILibrary.new(gameName, userId, rank)
             end
         else
             -- restore
-            window.MainUI.Position = originalPos
-            window.MainUI.Size = originalSize
-
-            if window.MainUI.Content then
-                window.MainUI.Content.Visible = true
+            windowObject.MainUI.Position = originalPos
+            windowObject.MainUI.Size = originalSize
+            if windowObject.MainUI.Content then
+                windowObject.MainUI.Content.Visible = true
             end
-            if window.MainUI.Sidebar.ContentHolder.UserInfo then
-                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = true
+            if windowObject.MainUI.Sidebar.ContentHolder.UserInfo then
+                windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Visible = true
             end
-            if window.MainUI.Sidebar.ContentHolder.Cheats then
-                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+            if windowObject.MainUI.Sidebar.ContentHolder.Cheats then
+                for _, child in pairs(windowObject.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
                     child.Visible = true
                 end
             end
         end
+    end
+
+    -- For external code to call "Window:ToggleMinimize()"
+    function windowObject:ToggleMinimize()
+        doMinimize(not minimized)
+    end
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        doMinimize(not minimized)
     end)
 
-    -- When close is pressed, destroy everything and wipe ApocFunctions
     closeButton.MouseButton1Click:Connect(function()
-        -- Wipe out ApocFunctions
-        if getgenv().ApocFunctions then
-            for k in pairs(getgenv().ApocFunctions) do
-                getgenv().ApocFunctions[k] = nil
-            end
+        -- kill any leftover features in ApocFunctions
+        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+            getgenv().ApocFunctions.StopAll()
         end
-        -- Destroy the entire UI (this effectively kills all connected events in the UI library)
-        GUI:Destroy()
+        GUI:Destroy() 
         warn("[UI] All scripts & UI terminated by Close button.")
+        -- Forcefully end the script context so nothing else runs:
+        error("UI closed and script forcibly ended.")
     end)
-    return setmetatable(
-        {
-            UI = {},
-            windowInfo = {
-                gameName = gameName,
-                userId = userId,
-                rank = rank
-            },
-            currentSelection = nil,
-            currentCategorySelection = nil,
-            currentTab = nil,
-            MainUI = window
+
+    ----------------------------------------------------------------------------
+    -- Return final
+    ----------------------------------------------------------------------------
+    return setmetatable({
+        UI = {},
+        MainUI = windowObject.MainUI,
+        windowInfo = {
+            gameName = gameName,
+            userId = userId,
+            rank = rank
         },
-        UILibrary.Window
-    )
+        currentSelection = nil,
+        currentCategorySelection = nil,
+        currentTab = nil
+    }, UILibrary.Window)
 end
 
 function UILibrary.Window:setAnimSpeed(val)
