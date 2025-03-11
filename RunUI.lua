@@ -1,5 +1,5 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.002")
+print("Running v1.01 of the .kero UI | patch 0.003")
 
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
@@ -33,7 +33,7 @@ task.spawn(function()
         end
 
         -- If the attribute got changed by a new instance, also stop:
-        if GUI:GetAttribute("InstanceID") ~= uniqueID then
+        if Identifier:GetAttribute("InstanceID") ~= uniqueID then
             killAll()
         end
     end
