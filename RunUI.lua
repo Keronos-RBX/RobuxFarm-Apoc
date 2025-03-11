@@ -20,14 +20,14 @@ end
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
     -- For example, if your Functions.lua is on GitHub:
     getgenv().ApocFunctions = loadstring(
-        game:HttpGet("https://raw.githubusercontent.com/YourRepo/Functions.lua")
+        game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua")
     )()
 end
 local Functions = getgenv().ApocFunctions
 
 -- 3) Load the UI library (the updated one that has the fixes)
 local UILib = loadstring(
-    game:HttpGet("https://raw.githubusercontent.com/YourRepo/UI.lua")
+    game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua")
 )()
 
 -- 4) Create the main window
