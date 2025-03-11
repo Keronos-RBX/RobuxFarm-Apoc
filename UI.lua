@@ -3294,7 +3294,7 @@ function UILibrary.new(gameName, userId, rank)
         minimized = not minimized
         if minimized then
             -- Move to top-left
-            window.MainUI.Position = UDim2.fromOffset(0, 0)
+            window.MainUI.Position = UDim2.fromOffset(0.7, 0.2)
             -- A smaller size that basically shows only the sidebar’s width & a short height
             window.MainUI.Size = UDim2.new(0, 220, 0, 60)
 
