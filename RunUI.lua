@@ -29,7 +29,6 @@ local Functions = getgenv().ApocFunctions
 -- 3) Load the UI library 
 local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
 
-print("test123")
 -- 4) Create the main window
 local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
 
