@@ -1,4 +1,5 @@
 --// RunUI.lua
+print("Loading v1.01 of the .kero UI")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
