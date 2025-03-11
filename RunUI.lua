@@ -1,21 +1,43 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.001")
+print("Running v1.01 of the .kero UI | patch 0.002")
 
+local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 1) If old UI exists, destroy it + call StopAll()
-local existing = CoreGui:FindFirstChild("HydraUILib")
-                or (LocalPlayer:FindFirstChild("PlayerGui")
-                    and LocalPlayer.PlayerGui:FindFirstChild("HydraUILib"))
-if existing then
-    -- If we have old ApocFunctions with StopAll, call it
-    if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-        getgenv().ApocFunctions.StopAll()
+local Identifier = Instance.new("Part")
+Identifier.Name = "UI-Id"
+Identifier.Parent = game:GetService("CoreGui")
+
+local uniqueID = HttpService:GenerateGUID(false)
+Identifier:SetAttribute("InstanceID", uniqueID)
+
+-- 3) (Optional) spawn a looping check every 2 seconds
+task.spawn(function()
+    local function killAll()
+        -- Stop features
+        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+            getgenv().ApocFunctions.StopAll()
+        end
+        --
+        Identifier:Destroy()
+        -- End the script forcibly
+        error("Script forcibly ended because new UI instance overrode the old one.")
     end
-    existing:Destroy()
-end
+
+    while task.wait(2) do
+        -- If the GUI no longer has a parent (destroyed), also stop:
+        if not Identifier.Parent then
+            killAll()
+        end
+
+        -- If the attribute got changed by a new instance, also stop:
+        if GUI:GetAttribute("InstanceID") ~= uniqueID then
+            killAll()
+        end
+    end
+end)
 
 -- 2) If ApocFunctions not loaded, load it
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
