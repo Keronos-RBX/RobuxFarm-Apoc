@@ -1,7 +1,4 @@
 --// Functions.lua
--- INFINITE YIELD–STYLE FLY + NOCLIP TOGGLE (FIXED so no extra toggles are needed)
--- Also includes the other functions (TP, ragdoll, damage, etc.)
-
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
 local Players = game:GetService("Players")
@@ -18,17 +15,51 @@ local function getRoot(char)
 end
 
 --------------------------------------------------------------------------------
--- INFINITE YIELD–STYLE FLY
+-- Global toggles and speeds
 --------------------------------------------------------------------------------
 local FLYING = false
 local QEfly = true           -- Allows Q/E vertical movement
-local iyflyspeed = 1
+local iyflyspeed = 1         -- Default Fly speed
 local vehicleflyspeed = 1
+
+local walkSpeedEnabled = false
+local desiredWalkSpeed = 16  -- For toggling WalkSpeed
+local defaultWalkSpeed = 16  -- Usually Roblox default
 
 -- Connections for fly
 local flyKeyDown, flyKeyUp
 
+--------------------------------------------------------------------------------
+-- WALKSPEED
+--------------------------------------------------------------------------------
+local function setHumanoidSpeed(speed)
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = speed
+        end
+    end
+end
+
+local function enableWalkSpeed(speed)
+    walkSpeedEnabled = true
+    desiredWalkSpeed = speed or 16
+    setHumanoidSpeed(desiredWalkSpeed)
+    print("[Functions] WalkSpeed toggled ON (speed:", desiredWalkSpeed, ")")
+end
+
+local function disableWalkSpeed()
+    walkSpeedEnabled = false
+    setHumanoidSpeed(defaultWalkSpeed)
+    print("[Functions] WalkSpeed toggled OFF (back to default speed).")
+end
+
+--------------------------------------------------------------------------------
+-- Fly routines
+--------------------------------------------------------------------------------
 local function sFLY(vfly)
+    -- Wait until character & root exist
     while not (LocalPlayer
         and LocalPlayer.Character
         and getRoot(LocalPlayer.Character)
@@ -40,17 +71,16 @@ local function sFLY(vfly)
     local root = getRoot(char)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     local IYMouse = LocalPlayer:GetMouse()
-
     while not IYMouse do task.wait() end
 
-    -- If we already have existing key connections, disconnect them
+    -- Disconnect old keybinds
     if flyKeyDown then flyKeyDown:Disconnect() end
     if flyKeyUp then flyKeyUp:Disconnect() end
 
     local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
     local SPEED = 0
 
-    -- Create BodyGyro/BodyVelocity to control flight
+    -- Create BodyGyro/BodyVelocity
     local BG = Instance.new("BodyGyro")
     local BV = Instance.new("BodyVelocity")
     BG.P = 9e4
@@ -63,15 +93,12 @@ local function sFLY(vfly)
 
     FLYING = true
 
-    -- If not vehicle fly, set PlatformStand
     if not vfly and humanoid then
         humanoid.PlatformStand = true
     end
 
-    -- The main flight loop
     task.spawn(function()
         while FLYING and task.wait() do
-            -- If movement keys are pressed, set speed
             if (CONTROL.F + CONTROL.B) ~= 0
                or (CONTROL.L + CONTROL.R) ~= 0
                or (CONTROL.Q + CONTROL.E) ~= 0
@@ -81,26 +108,21 @@ local function sFLY(vfly)
                 SPEED = 0
             end
 
-            -- Apply velocity in the direction of the camera
             if SPEED ~= 0 then
                 BV.velocity =
                     ((workspace.CurrentCamera.CoordinateFrame.LookVector
                         * (CONTROL.F + CONTROL.B))
-                    + ((workspace.CurrentCamera.CoordinateFrame
-                        * CFrame.new(
-                            (CONTROL.L + CONTROL.R),
-                            (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2,
-                            0
-                        ).p)
-                    - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+                     + ((workspace.CurrentCamera.CoordinateFrame
+                         * CFrame.new((CONTROL.L + CONTROL.R),
+                                      (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2,
+                                      0).p)
+                       - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED * iyflyspeed
             else
                 BV.velocity = Vector3.new(0, 0, 0)
             end
-
             BG.cframe = workspace.CurrentCamera.CoordinateFrame
         end
 
-        -- Cleanup after flight ends
         BG:Destroy()
         BV:Destroy()
         if humanoid and char.Parent then
@@ -114,9 +136,9 @@ local function sFLY(vfly)
         if key == "w" then
             CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
         elseif key == "s" then
-            CONTROL.B = - (vfly and vehicleflyspeed or iyflyspeed)
+            CONTROL.B = -(vfly and vehicleflyspeed or iyflyspeed)
         elseif key == "a" then
-            CONTROL.L = - (vfly and vehicleflyspeed or iyflyspeed)
+            CONTROL.L = -(vfly and vehicleflyspeed or iyflyspeed)
         elseif key == "d" then
             CONTROL.R = (vfly and vehicleflyspeed or iyflyspeed)
         elseif key == "e" and QEfly then
@@ -124,10 +146,7 @@ local function sFLY(vfly)
         elseif key == "q" and QEfly then
             CONTROL.E = -(vfly and vehicleflyspeed or iyflyspeed) * 2
         end
-
-        pcall(function()
-            workspace.CurrentCamera.CameraType = Enum.CameraType.Track
-        end)
+        pcall(function() workspace.CurrentCamera.CameraType = Enum.CameraType.Track end)
     end)
 
     -- KeyUp
@@ -159,27 +178,54 @@ local function NOFLY()
 end
 
 --------------------------------------------------------------------------------
--- FlyToggle
+-- Exposed Table
 --------------------------------------------------------------------------------
 local M = {}
 
+--------------------------------------------------------------------------------
+-- WALKSPEED TOGGLE & SET
+--------------------------------------------------------------------------------
+function M.WalkSpeedToggle(inputSpeed)
+    -- If already on, turn off
+    if walkSpeedEnabled then
+        disableWalkSpeed()
+    else
+        enableWalkSpeed(tonumber(inputSpeed) or 16)
+    end
+end
+
+function M.SetWalkSpeed(speed)
+    enableWalkSpeed(speed or 16)  -- forcibly sets it, leaving the toggle ON
+end
+
+--------------------------------------------------------------------------------
+-- SET FLY SPEED
+--------------------------------------------------------------------------------
+function M.SetFlySpeed(newSpeed)
+    local num = tonumber(newSpeed) or 1
+    iyflyspeed = num
+    print("[Functions] Fly speed set to:", num)
+end
+
+--------------------------------------------------------------------------------
+-- FlyToggle
+--------------------------------------------------------------------------------
 function M.FlyToggle()
     if FLYING then
         NOFLY()
         print("[Functions] Fly disabled.")
     else
         sFLY(false)
-        print("[Functions] Fly enabled.")
+        print("[Functions] Fly enabled (speed multiplier:", iyflyspeed, ").")
     end
 end
 
 --------------------------------------------------------------------------------
--- NOCLIP TOGGLE (FIXED)
+-- NOCLIP TOGGLE
 --------------------------------------------------------------------------------
 local Clip = true
 local Noclipping
 
--- Start NoClip
 local function StartNoclip()
     Clip = false
     local function NoclipLoop()
@@ -196,15 +242,12 @@ local function StartNoclip()
     print("[Functions] Noclip Enabled.")
 end
 
--- Stop NoClip (Now forcibly sets collisions back on)
 local function StopNoclip()
     Clip = true
     if Noclipping then
         Noclipping:Disconnect()
         Noclipping = nil
     end
-
-    -- Force all character parts to collide again
     local character = LocalPlayer.Character
     if character then
         for _, child in pairs(character:GetDescendants()) do
@@ -213,7 +256,6 @@ local function StopNoclip()
             end
         end
     end
-
     print("[Functions] Noclip Disabled.")
 end
 
