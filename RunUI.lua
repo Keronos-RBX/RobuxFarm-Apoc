@@ -17,12 +17,12 @@ end
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
     -- load or require your actual Functions
     -- For example:
-    getgenv().ApocFunctions = loadstring(game:HttpGet("https://yourrawlink.com/Functions.lua"))()
+    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
 end
 local Functions = getgenv().ApocFunctions
 
 -- 3) Load the UI library
-local UILib = loadstring(game:HttpGet("https://yourrawlink.com/UI.lua"))()
+local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
 
 -- 4) Create the main Window
 local Window = UILib.new("Apocrypha", game.Players.LocalPlayer.UserId, "Buyer")
