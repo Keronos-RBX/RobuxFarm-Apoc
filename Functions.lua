@@ -1,5 +1,5 @@
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.001")
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.001")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
