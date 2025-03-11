@@ -128,7 +128,7 @@ local function getObjGen()
                 UIListLayout_8 = Instance.new("UIListLayout"),
                 UIListLayout_9 = Instance.new("UIListLayout"),
                 UIPadding_5 = Instance.new("UIPadding"),
-                Window = Instance.new("Frame"),
+                MainContainer = Instance.new("Frame"),
                 Watermark = Instance.new("TextLabel"),
                 UIPadding_6 = Instance.new("UIPadding"),
                 MainUI = Instance.new("Frame"),
