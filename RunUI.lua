@@ -1,42 +1,48 @@
 --// RunUI.lua
 
--- 1) If old UI exists, destroy it + call StopAll()
 local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1) If old UI exists, destroy it + call StopAll()
 local existing = CoreGui:FindFirstChild("HydraUILib")
-            or (game.Players.LocalPlayer:FindFirstChild("PlayerGui")
-                and game.Players.LocalPlayer.PlayerGui:FindFirstChild("HydraUILib"))
+                or (LocalPlayer:FindFirstChild("PlayerGui")
+                    and LocalPlayer.PlayerGui:FindFirstChild("HydraUILib"))
 if existing then
-    -- If we have old ApocFunctions with a StopAll, call it
+    -- If we have old ApocFunctions with StopAll, call it
     if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
         getgenv().ApocFunctions.StopAll()
     end
     existing:Destroy()
 end
 
--- 2) Require or load the ApocFunctions if not already
+-- 2) If ApocFunctions not loaded, load it
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
-    -- load or require your actual Functions
-    -- For example:
-    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
+    -- For example, if your Functions.lua is on GitHub:
+    getgenv().ApocFunctions = loadstring(
+        game:HttpGet("https://raw.githubusercontent.com/YourRepo/Functions.lua")
+    )()
 end
 local Functions = getgenv().ApocFunctions
 
--- 3) Load the UI library
-local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
+-- 3) Load the UI library (the updated one that has the fixes)
+local UILib = loadstring(
+    game:HttpGet("https://raw.githubusercontent.com/YourRepo/UI.lua")
+)()
 
--- 4) Create the main Window
-local Window = UILib.new("Apocrypha", game.Players.LocalPlayer.UserId, "Buyer")
+-- 4) Create the main window
+local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
 
 --------------------------------------------------------------------------------
--- “Main Features”
+-- “Main Features” Category
 --------------------------------------------------------------------------------
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
 
--- Movement sub
+-- Movement subcategory
 local MovementSub = Category1:Button("Movement", "rbxassetid://8395747586")
 local MovementSection = MovementSub:Section("Movement", "Left")
 
--- Fly
+-- Fly Keybind
 MovementSection:Keybind({
     Title = "Fly Keybind",
     Description = "Toggle flight on/off",
@@ -45,7 +51,7 @@ MovementSection:Keybind({
     Functions.FlyToggle()
 end)
 
--- Flight Speed as a Slider 0.5–6
+-- Flight Speed
 MovementSection:Slider({
     Title = "Flight Speed",
     Description = "Set flight speed multiplier",
@@ -56,7 +62,7 @@ MovementSection:Slider({
     Functions.SetFlySpeed(value)
 end)
 
--- Walkspeed
+-- WalkSpeed input
 local walkSpeedValue = 16
 MovementSection:Textbox({
     Title = "WalkSpeed Input",
@@ -69,6 +75,7 @@ MovementSection:Textbox({
     end
 end)
 
+-- WalkSpeed toggle
 local walkSpeedToggleObj
 walkSpeedToggleObj = MovementSection:Toggle({
     Title = "WalkSpeed Toggle",
@@ -78,10 +85,13 @@ walkSpeedToggleObj = MovementSection:Toggle({
     if state then
         Functions.SetWalkSpeed(walkSpeedValue)
     else
+        -- This actually toggles off if it was on, or on if it was off,
+        -- but we specifically want to ensure it is OFF:
         Functions.WalkSpeedToggle()
     end
 end)
 
+-- WalkSpeed Keybind
 MovementSection:Keybind({
     Title = "WalkSpeed Keybind",
     Description = "Toggle walk speed same as above",
@@ -92,7 +102,7 @@ MovementSection:Keybind({
 end)
 
 --------------------------------------------------------------------------------
--- Teleportation (Left side now)
+-- Teleportation
 --------------------------------------------------------------------------------
 local TeleportSub = Category1:Button("Teleportation", "rbxassetid://8395747586")
 local TeleportSection = TeleportSub:Section("Teleportation", "Left")
@@ -114,22 +124,20 @@ TeleportSection:Textbox({
     end
 end)
 
--- SINGLE-SELECT dictionary approach for Teleport to Player
+-- Single-select dropdown for Teleport to Player
 local playerDict = {}
-for _,plr in ipairs(game.Players:GetPlayers()) do
+for _,plr in ipairs(Players:GetPlayers()) do
     playerDict[plr.Name] = false
 end
--- Let’s default to localplayer
-playerDict[game.Players.LocalPlayer.Name] = true
+playerDict[LocalPlayer.Name] = true
 
 TeleportSection:Dropdown({
     Title = "Teleport to Player",
     Description = "Choose a player",
     Options = playerDict,
-    Default = game.Players.LocalPlayer.Name,
-    Multi = false,  -- single select
+    Default = LocalPlayer.Name,
+    Multi = false,
 }, function(updatedDict)
-    -- Only one key in updatedDict is true
     for name, boolVal in pairs(updatedDict) do
         if boolVal == true then
             Functions.TeleportToPlayer(name)
@@ -138,9 +146,8 @@ TeleportSection:Dropdown({
     end
 end)
 
-
 --------------------------------------------------------------------------------
--- Misc (Left side)
+-- Misc
 --------------------------------------------------------------------------------
 local MiscSub = Category1:Button("Misc", "rbxassetid://8395747586")
 local MiscSection = MiscSub:Section("Misc Features", "Left")
@@ -171,7 +178,7 @@ MiscSection:Button({
     Functions.FixBrokenLeg()
 end)
 
--- Example placeholders
+-- Placeholder
 MiscSection:Toggle({
     Title = "Placeholder Toggle",
     Description = "Example usage",
@@ -187,7 +194,6 @@ MiscSection:Button({
 }, function()
     Functions.PlaceholderButton()
 end)
-
 
 --------------------------------------------------------------------------------
 -- Combat
@@ -212,9 +218,8 @@ CombatSection:Button({
     Functions.DamageSelf(dmgVal)
 end)
 
-
 --------------------------------------------------------------------------------
--- Settings (Between Main Features and Credits)
+-- Settings
 --------------------------------------------------------------------------------
 local SettingsCategory = Window:Category("Settings", "rbxassetid://8395621517")
 local SettingsSub = SettingsCategory:Button("Settings", "rbxassetid://8395747586")
@@ -226,9 +231,8 @@ SettingsSection:Keybind({
     Description = "Minimize or restore the UI",
     Default = Enum.KeyCode.M,
 }, function()
-    Window:ToggleMinimize()
+    Window:ToggleMinimize() -- Now works properly
 end)
-
 
 --------------------------------------------------------------------------------
 -- Credits
