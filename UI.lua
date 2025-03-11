@@ -3274,7 +3274,7 @@ function UILibrary.new(gameName, userId, rank)
     local function doMinimize(newState)
         minimized = newState
         if minimized then
-            mainFrame.Position = UDim2.fromOffset(0,0)
+            mainFrame.Position = UDim2.fromOffset(0.7,0.2)
             mainFrame.Size = UDim2.new(0,220,0,60)
             -- Hide or collapse the rest
         else
