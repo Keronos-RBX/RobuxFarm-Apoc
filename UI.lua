@@ -1,6 +1,6 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 print("Loading v1.01 of ui lib - Keronos")
-print("This is patch 0.008 of the Ui Lib")
+print("This is patch 0.009 of the Ui Lib")
 
 local UILibrary = {}
 --// Modules
@@ -4508,6 +4508,9 @@ function UILibrary.Section:Keybind(sett, callback)
                     callback()
                 end
             end
+        if getgenv().ApocFunctions and getgenv().ApocFunctions.RegisterKeybindConnection then
+            getgenv().ApocFunctions.RegisterKeybindConnection(keyPressConn)
+        end
         )
     end
 
