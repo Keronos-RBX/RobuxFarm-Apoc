@@ -1,58 +1,51 @@
 --// RunUI.lua
--- Updated to: 
---   • Check if an old UI is open. If yes, destroy it + clear ApocFunctions
---   • Then create new UI library instance
---   • Remainder includes your categories/sections as before
---   • "Flight Speed" slider, "Noclip" keybind, "Credits" category, etc.
 
--- 1) Prevent multiple UIs
-local existing = game:GetService("CoreGui"):FindFirstChild("HydraUILib") 
-               or game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("HydraUILib")
+-- 1) If old UI exists, destroy it + call StopAll()
+local CoreGui = game:GetService("CoreGui")
+local existing = CoreGui:FindFirstChild("HydraUILib")
+            or (game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+                and game.Players.LocalPlayer.PlayerGui:FindFirstChild("HydraUILib"))
 if existing then
-    existing:Destroy()
-    -- also clear out ApocFunctions so old references won't remain
-    if getgenv().ApocFunctions then
-        for k in pairs(getgenv().ApocFunctions) do
-            getgenv().ApocFunctions[k] = nil
-        end
+    -- If we have old ApocFunctions with a StopAll, call it
+    if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+        getgenv().ApocFunctions.StopAll()
     end
+    existing:Destroy()
 end
 
--- 2) Load & reference your Functions
-local Functions = getgenv().ApocFunctions or {}
-if not next(Functions) then
-    -- If it's empty, require the Functions now:
-    Functions = loadstring(game:HttpGet('https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua'))() 
-    -- ^ Use your real URL or local require
+-- 2) Require or load the ApocFunctions if not already
+if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
+    -- load or require your actual Functions
+    -- For example:
+    getgenv().ApocFunctions = loadstring(game:HttpGet("https://yourrawlink.com/Functions.lua"))()
 end
+local Functions = getgenv().ApocFunctions
 
 -- 3) Load the UI library
-local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua'))()
--- ^ again, replace with your actual raw script link or local require
+local UILib = loadstring(game:HttpGet("https://yourrawlink.com/UI.lua"))()
 
--- 4) Create the main window
+-- 4) Create the main Window
 local Window = UILib.new("Apocrypha", game.Players.LocalPlayer.UserId, "Buyer")
 
 --------------------------------------------------------------------------------
--- “Main Features” Category
+-- “Main Features”
 --------------------------------------------------------------------------------
-
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
 
--- Movement
-local MovementSub = Category1:Button("Movement", "http://www.roblox.com/asset/?id=8395747586")
+-- Movement sub
+local MovementSub = Category1:Button("Movement", "rbxassetid://8395747586")
 local MovementSection = MovementSub:Section("Movement", "Left")
 
--- Fly Keybind
+-- Fly
 MovementSection:Keybind({
     Title = "Fly Keybind",
     Description = "Toggle flight on/off",
     Default = Enum.KeyCode.R,
-}, function(_key)
+}, function()
     Functions.FlyToggle()
 end)
 
--- Flight Speed slider (0.5–6)
+-- Flight Speed as a Slider 0.5–6
 MovementSection:Slider({
     Title = "Flight Speed",
     Description = "Set flight speed multiplier",
@@ -63,7 +56,7 @@ MovementSection:Slider({
     Functions.SetFlySpeed(value)
 end)
 
--- WalkSpeed logic
+-- Walkspeed
 local walkSpeedValue = 16
 MovementSection:Textbox({
     Title = "WalkSpeed Input",
@@ -85,64 +78,74 @@ walkSpeedToggleObj = MovementSection:Toggle({
     if state then
         Functions.SetWalkSpeed(walkSpeedValue)
     else
-        Functions.WalkSpeedToggle() -- toggles off
+        Functions.WalkSpeedToggle()
     end
 end)
 
--- optional WalkSpeed Keybind
 MovementSection:Keybind({
     Title = "WalkSpeed Keybind",
-    Description = "Same as the WalkSpeed toggle",
+    Description = "Toggle walk speed same as above",
     Default = Enum.KeyCode.H,
 }, function()
     local current = walkSpeedToggleObj.getValue()
     walkSpeedToggleObj.setValue(not current)
 end)
 
--- Teleportation
-local TeleportSub = Category1:Button("Teleportation", "http://www.roblox.com/asset/?id=8395747586")
-local TeleportSection = TeleportSub:Section("Teleportation", "Right")
+--------------------------------------------------------------------------------
+-- Teleportation (Left side now)
+--------------------------------------------------------------------------------
+local TeleportSub = Category1:Button("Teleportation", "rbxassetid://8395747586")
+local TeleportSection = TeleportSub:Section("Teleportation", "Left")
 
 TeleportSection:Textbox({
     Title = "Teleport Coordinates",
     Description = "X,Y,Z (comma or space separated)",
     Default = "",
 }, function(value)
-    local separated = {}
+    local splitted = {}
     for chunk in string.gmatch(value, "[^%s,]+") do
-        table.insert(separated, chunk)
+        table.insert(splitted, chunk)
     end
-    if #separated >= 3 then
-        local x = tonumber(separated[1]) or 0
-        local y = tonumber(separated[2]) or 0
-        local z = tonumber(separated[3]) or 0
+    if #splitted >= 3 then
+        local x = tonumber(splitted[1]) or 0
+        local y = tonumber(splitted[2]) or 0
+        local z = tonumber(splitted[3]) or 0
         Functions.TeleportToCoordinates(Vector3.new(x,y,z))
     end
 end)
 
--- Fill the players list
-local players = {}
-for _,p in ipairs(game.Players:GetPlayers()) do
-    table.insert(players, p.Name)
+-- SINGLE-SELECT dictionary approach for Teleport to Player
+local playerDict = {}
+for _,plr in ipairs(game.Players:GetPlayers()) do
+    playerDict[plr.Name] = false
 end
+-- Let’s default to localplayer
+playerDict[game.Players.LocalPlayer.Name] = true
 
 TeleportSection:Dropdown({
     Title = "Teleport to Player",
-    Description = "Select a player",
-    Options = players,  -- important for it to show
-    Default = players[1] or "",
-}, function(name)
-    Functions.TeleportToPlayer(name)
+    Description = "Choose a player",
+    Options = playerDict,
+    Default = game.Players.LocalPlayer.Name,
+    Multi = false,  -- single select
+}, function(updatedDict)
+    -- Only one key in updatedDict is true
+    for name, boolVal in pairs(updatedDict) do
+        if boolVal == true then
+            Functions.TeleportToPlayer(name)
+            break
+        end
+    end
 end)
 
 
 --------------------------------------------------------------------------------
--- Misc (formerly Advanced)
+-- Misc (Left side)
 --------------------------------------------------------------------------------
-local MiscSub = Category1:Button("Misc", "http://www.roblox.com/asset/?id=8395747586")
-local MiscSection = MiscSub:Section("Misc Features", "Right")
+local MiscSub = Category1:Button("Misc", "rbxassetid://8395747586")
+local MiscSection = MiscSub:Section("Misc Features", "Left")
 
--- Keybind for Noclip
+-- Noclip Keybind
 MiscSection:Keybind({
     Title = "Noclip Keybind",
     Description = "Toggle noclip on/off",
@@ -151,6 +154,7 @@ MiscSection:Keybind({
     Functions.NoclipToggle()
 end)
 
+-- Ragdoll / Fix Leg
 MiscSection:Button({
     Title = "Ragdoll Self",
     ButtonName = "RAGDOLL",
@@ -162,14 +166,15 @@ end)
 MiscSection:Button({
     Title = "Fix Broken Leg",
     ButtonName = "FIX LEG",
-    Description = "Restore your broken leg",
+    Description = "Restore broken leg",
 }, function()
     Functions.FixBrokenLeg()
 end)
 
+-- Example placeholders
 MiscSection:Toggle({
     Title = "Placeholder Toggle",
-    Description = "Example future toggle",
+    Description = "Example usage",
     Default = false,
 }, function(state)
     Functions.PlaceholderToggle(state)
@@ -178,7 +183,7 @@ end)
 MiscSection:Button({
     Title = "Placeholder Button",
     ButtonName = "DO SOMETHING",
-    Description = "Example usage",
+    Description = "Example button",
 }, function()
     Functions.PlaceholderButton()
 end)
@@ -187,38 +192,55 @@ end)
 --------------------------------------------------------------------------------
 -- Combat
 --------------------------------------------------------------------------------
-local CombatSub = Category1:Button("Combat", "http://www.roblox.com/asset/?id=8395747586")
+local CombatSub = Category1:Button("Combat", "rbxassetid://8395747586")
 local CombatSection = CombatSub:Section("Combat Tools", "Left")
 
-local damageAmount = 10
+local dmgVal = 10
 CombatSection:Textbox({
     Title = "Damage Amount",
-    Description = "Enter how much damage to do to self",
+    Description = "How much to damage yourself",
     Default = "10",
 }, function(val)
-    damageAmount = tonumber(val) or 10
+    dmgVal = tonumber(val) or 10
 end)
 
 CombatSection:Button({
     Title = "Apply Damage",
     ButtonName = "DAMAGE ME",
-    Description = "Damages yourself by the set amount",
+    Description = "Damages you by that amount",
 }, function()
-    Functions.DamageSelf(damageAmount)
+    Functions.DamageSelf(dmgVal)
 end)
 
 
 --------------------------------------------------------------------------------
--- Credits 
+-- Settings (Between Main Features and Credits)
 --------------------------------------------------------------------------------
-local CreditsCategory = Window:Category("Credits", "http://www.roblox.com/asset/?id=8395621517")
-local CreditsSub = CreditsCategory:Button("Credits", "http://www.roblox.com/asset/?id=8395747586")
+local SettingsCategory = Window:Category("Settings", "rbxassetid://8395621517")
+local SettingsSub = SettingsCategory:Button("Settings", "rbxassetid://8395747586")
+local SettingsSection = SettingsSub:Section("UI Behavior", "Left")
+
+-- Keybind to toggle Minimize
+SettingsSection:Keybind({
+    Title = "Minimize UI",
+    Description = "Minimize or restore the UI",
+    Default = Enum.KeyCode.M,
+}, function()
+    Window:ToggleMinimize()
+end)
+
+
+--------------------------------------------------------------------------------
+-- Credits
+--------------------------------------------------------------------------------
+local CreditsCategory = Window:Category("Credits", "rbxassetid://8395621517")
+local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
 
 CreditsSection:Button({
     Title = "UI by Hydra",
     ButtonName = "Thanks",
-    Description = "Thanks to Hydra UI Lib!",
+    Description = "Thank you Hydra UI Lib!",
 }, function()
-    print("[Credits] Hydra UI Lib credit clicked.")
+    print("[Credits] Hydra UI Lib clicked!")
 end)
