@@ -286,6 +286,7 @@ local function getObjGen()
                 Notification_3 = Instance.new("Frame"),
                 UICorner_23 = Instance.new("UICorner"),
                 UIAspectRatioConstraint_17 = Instance.new("UIAspectRatioConstraint")
+                Gui = {}
             }
 
             --Properties:
@@ -1199,14 +1200,14 @@ local function getObjGen()
             Gui.UIPadding_5.PaddingLeft = UDim.new(0, 4)
             Gui.UIPadding_5.PaddingRight = UDim.new(0, 4)
 
-            Gui.Window.Name = "Window"
-            Gui.Window.Parent = Gui.Objects
-            Gui.Window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Gui.Window.BackgroundTransparency = 1.000
-            Gui.Window.Size = UDim2.new(1, 0, 1, 0)
+            Gui.MainContainer.Name = "Window"
+            Gui.MainContainer.Parent = Gui.Objects
+            Gui.MainContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Gui.MainContainer.BackgroundTransparency = 1.000
+            Gui.MainContainer.Size = UDim2.new(1, 0, 1, 0)
 
             Gui.Watermark.Name = "Watermark"
-            Gui.Watermark.Parent = Gui.Window
+            Gui.Watermark.Parent = Gui.MainContainer
             Gui.Watermark.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Watermark.BackgroundTransparency = 1.000
             Gui.Watermark.Size = UDim2.new(0.5, 0, 0.0199999996, 0)
@@ -1218,14 +1219,14 @@ local function getObjGen()
             Gui.Watermark.TextXAlignment = Enum.TextXAlignment.Left
             Gui.Watermark.Position = UDim2.new(0, 0, 0, 0)
 
-            Gui.UIPadding_6.Parent = Gui.Window
+            Gui.UIPadding_6.Parent = Gui.MainContainer
             Gui.UIPadding_6.PaddingBottom = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingLeft = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingRight = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingTop = UDim.new(0, 8)
 
             Gui.MainUI.Name = "MainUI"
-            Gui.MainUI.Parent = Gui.Window
+            Gui.MainUI.Parent = Gui.MainContainer
             Gui.MainUI.AnchorPoint = Vector2.new(0.5, 0.5)
             Gui.MainUI.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
             Gui.MainUI.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1942,7 +1943,7 @@ local function getObjGen()
             Gui.UICorner_18.Parent = Gui.Shadow_3
 
             Gui.Notifications.Name = "Notifications"
-            Gui.Notifications.Parent = Gui.Window
+            Gui.Notifications.Parent = Gui.MainContainer
             Gui.Notifications.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Notifications.BackgroundTransparency = 1.000
             Gui.Notifications.Position = UDim2.new(0.850000024, 0, 0, 0)
@@ -3241,126 +3242,55 @@ function UILibrary.new(gameName, userId, rank)
     local GUI = Instance.new("ScreenGui")
     GUI.Name = "HydraUILib"
     GUI.Parent = game:GetService("CoreGui")
-    GUI.ResetOnSpawn = false
-    GUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-    local windowObject = objectGenerator.new("Window")
-    windowObject.Parent = GUI
+    local mainFrame = objectGenerator.new("MainContainer")
+    mainFrame.Parent = GUI
 
-    -- Make it draggable from the logo
-    local dragFrame = Instance.new("Frame")
-    dragFrame.BackgroundTransparency = 1
-    dragFrame.Size = UDim2.fromScale(2,2)
-    dragFrame.AnchorPoint = Vector2.new(0.5,0.5)
-    dragFrame.Position = UDim2.fromScale(0.5,0.5)
-    dragFrame.Parent = windowObject.MainUI.Sidebar.ContentHolder.Cheats.Logo
-    local dragApi = Draggable.Drag(windowObject.MainUI, dragFrame)
-
-    -- Watermark, user info
-    windowObject.Watermark.Text = ("RobuxFarm.Kero | %s | %s"):format(userId, gameName)
-    local userinfo = windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Content
-    userinfo.Rank.Text = rank
-    userinfo.Title.Text = tostring(userId)
-
-    -- Add the close & minimize
-     local closeButton = Instance.new("ImageButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Image = "rbxassetid://7072725342"
-    closeButton.ImageColor3 = Color3.fromRGB(200,200,200)
-    closeButton.Size = UDim2.new(0,20, 0,20)
-    closeButton.Position = UDim2.new(1, -25, 0, 5)
-    closeButton.ZIndex = 300
-    closeButton.BackgroundTransparency = 1
-    closeButton.Parent = windowObject.MainUI
-
-    local minimizeButton = Instance.new("ImageButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Image = "rbxassetid://7072706663"
-    minimizeButton.ImageColor3 = Color3.fromRGB(200,200,200)
-    minimizeButton.Size = UDim2.new(0,20, 0,20)
-    minimizeButton.Position = UDim2.new(1, -50, 0, 5)
-    minimizeButton.ZIndex = 300
-    minimizeButton.BackgroundTransparency = 1
-    minimizeButton.Parent = windowObject.MainUI
+    -- Here you define closeButton, minimizeButton, etc.
+    -- DO NOT do "function mainFrame:ToggleMinimize()"
 
     local minimized = false
-    local originalPos = windowObject.MainUI.Position
-    local originalSize = windowObject.MainUI.Size
+    local originalPos = mainFrame.Position
+    local originalSize = mainFrame.Size
 
     local function doMinimize(newState)
         minimized = newState
         if minimized then
-            -- top-left, small size
-            windowObject.MainUI.Position = UDim2.fromOffset(0, 0)
-            windowObject.MainUI.Size = UDim2.new(0,220, 0,60)
-            -- hide main content except the logo
-            if windowObject.MainUI.Content then
-                windowObject.MainUI.Content.Visible = false
-            end
-            if windowObject.MainUI.Sidebar.ContentHolder.UserInfo then
-                windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Visible = false
-            end
-            if windowObject.MainUI.Sidebar.ContentHolder.Cheats then
-                for _, child in pairs(windowObject.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
-                    if child.Name ~= "Logo" then
-                        child.Visible = false
-                    end
-                end
-            end
+            mainFrame.Position = UDim2.fromOffset(0,0)
+            mainFrame.Size = UDim2.new(0,220,0,60)
+            -- Hide or collapse the rest
         else
-            -- restore
-            windowObject.MainUI.Position = originalPos
-            windowObject.MainUI.Size = originalSize
-            if windowObject.MainUI.Content then
-                windowObject.MainUI.Content.Visible = true
-            end
-            if windowObject.MainUI.Sidebar.ContentHolder.UserInfo then
-                windowObject.MainUI.Sidebar.ContentHolder.UserInfo.Visible = true
-            end
-            if windowObject.MainUI.Sidebar.ContentHolder.Cheats then
-                for _, child in pairs(windowObject.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
-                    child.Visible = true
-                end
-            end
+            mainFrame.Position = originalPos
+            mainFrame.Size = originalSize
+            -- Show it again
         end
     end
 
-    -- For external code to call "Window:ToggleMinimize()"
-    function windowObject:ToggleMinimize()
-        doMinimize(not minimized)
-    end
+    -- e.g. close button
+    closeButton.MouseButton1Click:Connect(function()
+        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+            getgenv().ApocFunctions.StopAll()
+        end
+        GUI:Destroy()
+        error("UI closed and script forcibly ended.")
+    end)
 
     minimizeButton.MouseButton1Click:Connect(function()
         doMinimize(not minimized)
     end)
 
-    closeButton.MouseButton1Click:Connect(function()
-        -- kill any leftover features in ApocFunctions
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-        GUI:Destroy() 
-        warn("[UI] All scripts & UI terminated by Close button.")
-        -- Forcefully end the script context so nothing else runs:
-        error("UI closed and script forcibly ended.")
-    end)
-
-    ----------------------------------------------------------------------------
-    -- Return final
-    ----------------------------------------------------------------------------
+    -- Return a table so "Window" is the metatable
     return setmetatable({
-        UI = {},
-        MainUI = windowObject.MainUI,
-        windowInfo = {
-            gameName = gameName,
-            userId = userId,
-            rank = rank
-        },
-        currentSelection = nil,
-        currentCategorySelection = nil,
-        currentTab = nil
+        MainFrame = mainFrame,
+        minimized = minimized,
+        doMinimize = doMinimize,
+        -- you can store gameName/userId/rank here too
+        gameName = gameName,
+        userId = userId,
+        rank = rank,
     }, UILibrary.Window)
 end
+
 
 function UILibrary.Window:setAnimSpeed(val)
     TI = TweenInfo.new(.4 / (val / 100), Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
@@ -5235,6 +5165,10 @@ function UILibrary.Section:Slider(sett, callback)
         ][sett.Title] = meta
 
     return meta
+end
+
+function UILibrary.Window:ToggleMinimize()
+    self.doMinimize(not self.minimized)
 end
 
 function UILibrary.Section:Dropdown(sett, callback)
