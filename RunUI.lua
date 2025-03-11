@@ -1,49 +1,12 @@
---// RunUI
--- Refined script with organized sections and close/minimize functionality
+--// RunUI.lua
+-- Refined script with organized sections, now with WalkSpeed & Flight Speed inputs
+-- REMOVED the local function addWindowControls() since we’ll do it in UI.lua
 
--- 1. Load the UI library
 local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua'))()
 local Functions = getgenv().ApocFunctions
 
 -- Create main window
 local Window = UILib.new("Apocrypha", game.Players.LocalPlayer.UserId, "Buyer")
-
--- Add close and minimize buttons
-local function addWindowControls()
-    local mainUI = Window.MainUI
-    local closeButton = Instance.new("ImageButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Image = "rbxassetid://7072725342"
-    closeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
-    closeButton.Size = UDim2.new(0, 20, 0, 20)
-    closeButton.Position = UDim2.new(1, -25, 0, 5)
-    closeButton.ZIndex = 200
-    closeButton.Parent = mainUI
-    
-    local minimizeButton = Instance.new("ImageButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Image = "rbxassetid://7072706663"
-    minimizeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
-    minimizeButton.Size = UDim2.new(0, 20, 0, 20)
-    minimizeButton.Position = UDim2.new(1, -50, 0, 5)
-    minimizeButton.ZIndex = 200
-    minimizeButton.Parent = mainUI
-
-    -- Close button functionality
-    closeButton.MouseButton1Click:Connect(function()
-        mainUI.Visible = false
-    end)
-    
-    -- Minimize button functionality
-    local minimized = false
-    local originalSize = mainUI.Size
-    minimizeButton.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        mainUI.Size = minimized and UDim2.new(0.2, 0, 0, 40) or originalSize
-    end)
-end
-
-addWindowControls()
 
 -- Create main category
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
@@ -58,6 +21,39 @@ MovementSection:Keybind({
     Default = Enum.KeyCode.R,
 }, function(key)
     Functions.FlyToggle()
+end)
+
+-- 1) Textbox for Flight Speed
+MovementSection:Textbox({
+    Title = "Flight Speed",
+    Description = "Sets the flight speed multiplier",
+    Default = "1",
+}, function(value)
+    local num = tonumber(value) or 1
+    Functions.SetFlySpeed(num)
+end)
+
+-- 2) WalkSpeed “toggle” approach
+local walkSpeedInput = 16  -- store user’s desired speed
+MovementSection:Textbox({
+    Title = "WalkSpeed Input",
+    Description = "Enter your custom walk speed",
+    Default = "16",
+}, function(value)
+    walkSpeedInput = tonumber(value) or 16
+end)
+
+MovementSection:Toggle({
+    Title = "WalkSpeed Toggle",
+    Description = "Toggle custom walk speed on/off",
+    Default = false,
+}, function(state)
+    if state then
+        Functions.SetWalkSpeed(walkSpeedInput)
+    else
+        -- if toggled off, revert to default (16)
+        Functions.WalkSpeedToggle()  -- This call toggles it OFF if it was on
+    end
 end)
 
 MovementSection:Button({
