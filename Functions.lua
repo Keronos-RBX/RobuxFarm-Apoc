@@ -1,250 +1,230 @@
 --// Functions.lua
--- This script sets up an accessible table of functions for your UI to call externally.
+-- A module-like script for external injection.
+-- It provides the new fly code (sFLY/NOFLY) alongside other universal functions.
+-- Store these in getgenv().ApocFunctions so your UI can call them.
 
--- We store everything in a global table so that any other injected script can easily access it.
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
-local M = {}
+-- Services/shortcuts
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
---------------------------------------------------------------------------
--- FLY IMPLEMENTATION
---------------------------------------------------------------------------
--- We'll create a simple WASD-based flying system using BodyVelocity-like logic
--- inside a RunService.Heartbeat loop. Toggles on/off each time you call FlyToggle().
+-- A simple helper to get the root part
+local function getRoot(char)
+    return char:FindFirstChild("HumanoidRootPart")
+        or char:FindFirstChild("Torso")
+        or char:FindFirstChild("UpperTorso")
+end
 
-local flying = false
-local flySpeed = 50
+--------------------------------------------------------------------------------
+-- FLY CODE (from your provided snippet)
+--------------------------------------------------------------------------------
 
-local wDown, aDown, sDown, dDown = false, false, false, false
-local inputBeganConnection, inputEndedConnection, flyConnection
+local FLYING = false
+local QEfly = true
+local iyflyspeed = 1
+local vehicleflyspeed = 1
 
-local function StartFly()
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character or plr.CharacterAdded:Wait()
-    local hum = char:FindFirstChildWhichIsA("Humanoid")
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not hum then return end
+-- We'll keep references to input connections so we can disconnect them.
+local flyKeyDown, flyKeyUp
 
-    -- Prevent standard physics from interfering
-    hum.PlatformStand = true
+-- The sFLY function from your snippet (minor modifications to local variables).
+local function sFLY(vfly)
+    -- Wait until player, character, root, humanoid, and mouse exist
+    repeat task.wait() until
+        LocalPlayer
+        and LocalPlayer.Character
+        and getRoot(LocalPlayer.Character)
+        and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 
-    local userInputService = game:GetService("UserInputService")
+    -- We can store the mouse here. 
+    -- (In Infinite Yield, IYMouse is usually a globally set mouse, but we'll just get the local one.)
+    local IYMouse = LocalPlayer:GetMouse()
+    repeat task.wait() until IYMouse
 
-    local function onInputBegan(input, gpe)
-        if gpe then return end
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if input.KeyCode == Enum.KeyCode.W then
-                wDown = true
-            elseif input.KeyCode == Enum.KeyCode.S then
-                sDown = true
-            elseif input.KeyCode == Enum.KeyCode.A then
-                aDown = true
-            elseif input.KeyCode == Enum.KeyCode.D then
-                dDown = true
-            end
-        end
+    -- If we already have key connections, disconnect them
+    if flyKeyDown or flyKeyUp then
+        flyKeyDown:Disconnect()
+        flyKeyUp:Disconnect()
     end
 
-    local function onInputEnded(input, gpe)
-        if gpe then return end
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if input.KeyCode == Enum.KeyCode.W then
-                wDown = false
-            elseif input.KeyCode == Enum.KeyCode.S then
-                sDown = false
-            elseif input.KeyCode == Enum.KeyCode.A then
-                aDown = false
-            elseif input.KeyCode == Enum.KeyCode.D then
-                dDown = false
+    local T = getRoot(LocalPlayer.Character)
+    local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local SPEED = 0
+
+    local function FLY()
+        FLYING = true
+        local BG = Instance.new("BodyGyro")
+        local BV = Instance.new("BodyVelocity")
+        BG.P = 9e4
+        BG.Parent = T
+        BV.Parent = T
+        BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        BG.cframe = T.CFrame
+        BV.velocity = Vector3.new(0, 0, 0)
+        BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+
+        task.spawn(function()
+            repeat
+                task.wait()
+                -- If not vehicle fly and we have a humanoid, set PlatformStand to true
+                if not vfly and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = true
+                end
+
+                -- Adjust speed based on any pressed keys
+                if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+                    SPEED = 50
+                elseif SPEED ~= 0 then
+                    SPEED = 0
+                end
+
+                -- If we have a direction to move, apply it
+                if (CONTROL.L + CONTROL.R) ~= 0
+                   or (CONTROL.F + CONTROL.B) ~= 0
+                   or (CONTROL.Q + CONTROL.E) ~= 0
+                then
+                    BV.velocity = (
+                        (workspace.CurrentCamera.CoordinateFrame.LookVector * (CONTROL.F + CONTROL.B))
+                        + (
+                            (workspace.CurrentCamera.CoordinateFrame
+                                * CFrame.new(
+                                    CONTROL.L + CONTROL.R,
+                                    (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2,
+                                    0
+                                ).p
+                            ) - workspace.CurrentCamera.CoordinateFrame.p
+                        )
+                    ) * SPEED
+                    lCONTROL = {
+                        F = CONTROL.F,
+                        B = CONTROL.B,
+                        L = CONTROL.L,
+                        R = CONTROL.R
+                    }
+                elseif SPEED ~= 0 then
+                    -- Continue moving with last direction if needed
+                    BV.velocity = (
+                        (workspace.CurrentCamera.CoordinateFrame.LookVector * (lCONTROL.F + lCONTROL.B))
+                        + (
+                            (workspace.CurrentCamera.CoordinateFrame
+                                * CFrame.new(
+                                    lCONTROL.L + lCONTROL.R,
+                                    (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2,
+                                    0
+                                ).p
+                            ) - workspace.CurrentCamera.CoordinateFrame.p
+                        )
+                    ) * SPEED
+                else
+                    -- No movement
+                    BV.velocity = Vector3.new(0, 0, 0)
+                end
+
+                BG.cframe = workspace.CurrentCamera.CoordinateFrame
+            until not FLYING
+
+            -- Cleanup after FLY ends
+            CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            SPEED = 0
+            BG:Destroy()
+            BV:Destroy()
+
+            if LocalPlayer.Character
+               and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
             end
-        end
+        end)
     end
 
-    inputBeganConnection = userInputService.InputBegan:Connect(onInputBegan)
-    inputEndedConnection = userInputService.InputEnded:Connect(onInputEnded)
-
-    flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        if not flying then return end
-        if not hrp or not char or not char.Parent then
-            -- If character/HRP is gone, stop flying.
-            M.FlyToggle()
-            return
+    -- KeyDown connection
+    flyKeyDown = IYMouse.KeyDown:Connect(function(KEY)
+        KEY = KEY:lower()
+        if KEY == "w" then
+            CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY == "s" then
+            CONTROL.B = -(vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY == "a" then
+            CONTROL.L = -(vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY == "d" then
+            CONTROL.R = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif QEfly and KEY == "e" then
+            CONTROL.Q = (vfly and vehicleflyspeed or iyflyspeed) * 2
+        elseif QEfly and KEY == "q" then
+            CONTROL.E = -((vfly and vehicleflyspeed or iyflyspeed) * 2)
         end
+        pcall(function()
+            workspace.CurrentCamera.CameraType = Enum.CameraType.Track
+        end)
+    end)
 
-        local camera = workspace.CurrentCamera
-        local moveDir = Vector3.new()
+    -- KeyUp connection
+    flyKeyUp = IYMouse.KeyUp:Connect(function(KEY)
+        KEY = KEY:lower()
+        if KEY == "w" then
+            CONTROL.F = 0
+        elseif KEY == "s" then
+            CONTROL.B = 0
+        elseif KEY == "a" then
+            CONTROL.L = 0
+        elseif KEY == "d" then
+            CONTROL.R = 0
+        elseif KEY == "e" then
+            CONTROL.Q = 0
+        elseif KEY == "q" then
+            CONTROL.E = 0
+        end
+    end)
 
-        -- Basic WASD movement relative to camera
-        if wDown then
-            moveDir = moveDir + camera.CFrame.LookVector
-        end
-        if sDown then
-            moveDir = moveDir - camera.CFrame.LookVector
-        end
-        if aDown then
-            moveDir = moveDir - camera.CFrame.RightVector
-        end
-        if dDown then
-            moveDir = moveDir + camera.CFrame.RightVector
-        end
+    -- Finally, launch the FLY loop
+    FLY()
+end
 
-        -- Keep flight primarily horizontal. Remove vertical camera tilt from direction.
-        moveDir = Vector3.new(moveDir.X, 0, moveDir.Z)
-
-        -- Set velocity
-        hrp.Velocity = moveDir * flySpeed
+-- The NOFLY function (from your snippet)
+local function NOFLY()
+    FLYING = false
+    if flyKeyDown or flyKeyUp then
+        flyKeyDown:Disconnect()
+        flyKeyUp:Disconnect()
+    end
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+    pcall(function()
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
     end)
 end
 
-local function StopFly()
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character
-    if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            hum.PlatformStand = false
-        end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.Velocity = Vector3.new(0, 0, 0)
-        end
-    end
-    
-    -- Disconnect input listeners
-    if inputBeganConnection then
-        inputBeganConnection:Disconnect()
-        inputBeganConnection = nil
-    end
-    if inputEndedConnection then
-        inputEndedConnection:Disconnect()
-        inputEndedConnection = nil
-    end
-    if flyConnection then
-        flyConnection:Disconnect()
-        flyConnection = nil
-    end
-
-    -- Reset WASD states
-    wDown, aDown, sDown, dDown = false, false, false, false
-end
+--------------------------------------------------------------------------------
+-- FlyToggle (tie it all together)
+--------------------------------------------------------------------------------
+local M = {}
 
 function M.FlyToggle()
-    flying = not flying
-    if flying then
-        print("[Functions] Fly enabled.")
-        StartFly()
-    else
+    if FLYING then
+        NOFLY()
         print("[Functions] Fly disabled.")
-        StopFly()
+    else
+        sFLY(false) -- Pass 'true' if you want the vehicleflyspeed version
+        print("[Functions] Fly enabled.")
     end
 end
 
---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- TELEPORT TO COORDINATES
---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 function M.TeleportToCoordinates(vec3)
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character
+    local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         char.HumanoidRootPart.CFrame = CFrame.new(vec3)
         print("[Functions] Teleported to:", vec3)
     else
-        warn("[Functions] Unable to teleport (no character or HumanoidRootPart).")
+        warn("[Functions] Unable to teleport (no character or root part).")
     end
 end
 
---------------------------------------------------------------------------
--- TELEPORT TO PLAYER
---------------------------------------------------------------------------
-function M.TeleportToPlayer(playerName)
-    local plr = game.Players:FindFirstChild(playerName)
-    if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-        local localPlr = game.Players.LocalPlayer
-        local localChar = localPlr and localPlr.Character
-        if localChar and localChar:FindFirstChild("HumanoidRootPart") then
-            local hrp = localChar.HumanoidRootPart
-            hrp.CFrame = plr.Character.HumanoidRootPart.CFrame
-            print("[Functions] Teleported to player:", playerName)
-        end
-    else
-        warn("[Functions] Could not find target player's HumanoidRootPart or player does not exist.")
-    end
-end
-
---------------------------------------------------------------------------
--- FIX BROKEN LEG (Example Implementation)
---------------------------------------------------------------------------
-function M.FixBrokenLeg()
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character
-    if not char then return end
-
-    local hum = char:FindFirstChildWhichIsA("Humanoid")
-    if hum then
-        -- Example approach: force Humanoid to 'GetUp' state or restore health
-        -- In your custom game, you might do something else (reset a broken-bone variable, etc.)
-        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-        hum.Health = hum.MaxHealth
-        print("[Functions] Broken leg fixed (example).")
-    end
-end
-
---------------------------------------------------------------------------
--- RAGDOLL YOURSELF
---------------------------------------------------------------------------
-function M.RagdollSelf()
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character
-    if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Physics)
-            print("[Functions] Character ragdolled.")
-        end
-    end
-end
-
---------------------------------------------------------------------------
--- DAMAGE YOURSELF
---------------------------------------------------------------------------
-function M.DamageSelf(amount)
-    local plr = game.Players.LocalPlayer
-    local char = plr.Character
-    if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            hum:TakeDamage(amount)
-            print("[Functions] Damaged self by:", amount)
-        end
-    end
-end
-
---------------------------------------------------------------------------
--- PLACEHOLDER KEYBIND
---------------------------------------------------------------------------
-function M.PlaceholderKeybind(key)
-    print("[Functions] Placeholder keybind triggered:", key)
-end
-
---------------------------------------------------------------------------
--- PLACEHOLDER TOGGLE
---------------------------------------------------------------------------
-function M.PlaceholderToggle(state)
-    print("[Functions] Placeholder toggle changed:", state)
-end
-
---------------------------------------------------------------------------
--- PLACEHOLDER BUTTON
---------------------------------------------------------------------------
-function M.PlaceholderButton()
-    print("[Functions] Placeholder button clicked.")
-end
-
---------------------------------------------------------------------------
-
--- Put all these into the global ApocFunctions table so our UI script can call them.
-for k,v in pairs(M) do
-    getgenv().ApocFunctions[k] = v
-end
-
-return M
+------------------------------------
