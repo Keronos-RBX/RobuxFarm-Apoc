@@ -25,7 +25,7 @@ if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
     )()
 end
 local Functions = getgenv().ApocFunctions
-
+print("test3411")
 -- 3) Load the UI library (the updated one that has the fixes)
 local UILib = loadstring(
     game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua")
