@@ -13,7 +13,7 @@ local MainSection = MainSub:Section("Player & Combat Section", "Left")
 MainSection:Keybind({
     Title = "Fly",
     Description = "Toggle flight on/off",
-    Default = Enum.KeyCode.F,
+    Default = Enum.KeyCode.R,
 }, function(key)
     Functions.FlyToggle()  -- or Functions.FlyToggle(key) if you want to pass the key
 end)
@@ -104,7 +104,7 @@ MainSection:Keybind({
     Description = "Example future keybind usage",
     Default = Enum.KeyCode.P,
 }, function(key)
-    Functions.PlaceholderKeybind(key)
+    Functions.NoclipToggle(key)
 end)
 
 
