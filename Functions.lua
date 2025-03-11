@@ -1,3 +1,4 @@
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.001
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
 local Players = game:GetService("Players")
@@ -375,6 +376,29 @@ function M.StopAll()
     -- Add any other toggles you might need
     warn("[ApocFunctions] All features forcibly stopped.")
 end
+
+-- Make a table to hold references to keybind connections
+getgenv().ApocFunctions.AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
+
+-- A function to register a new keybind connection
+function getgenv().ApocFunctions.RegisterKeybindConnection(conn)
+    table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
+end
+
+-- Edit your existing StopAll() to disconnect keybinds:
+function getgenv().ApocFunctions.StopAll()
+    -- (Your existing code that turns off fly, noclip, etc. stays here)
+
+    -- Now disconnect all keybind connections as well:
+    for _, c in ipairs(getgenv().ApocFunctions.AllKeybindConns) do
+        c:Disconnect()
+    end
+    -- Clear the table so reusing is possible only if script is re-run
+    getgenv().ApocFunctions.AllKeybindConns = {}
+
+    warn("[ApocFunctions] All features forcibly stopped, keybinds disconnected.")
+end
+
 
 --------------------------------------------------------------------------------
 for k,v in pairs(M) do
