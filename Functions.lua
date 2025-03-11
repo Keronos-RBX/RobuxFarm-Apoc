@@ -25,6 +25,7 @@ local vehicleflyspeed = 1
 local walkSpeedEnabled = false
 local desiredWalkSpeed = 16  -- For toggling WalkSpeed
 local defaultWalkSpeed = 16  -- Usually Roblox default
+local NoclipConn
 
 -- Connections for fly
 local flyKeyDown, flyKeyUp
@@ -177,6 +178,38 @@ local function NOFLY()
     end)
 end
 
+local function turnOffFly()
+    FLYING = false
+    -- disconnect any old connections, revert humanoid, etc.
+end
+
+local function turnOffWalkSpeed()
+    walkSpeedEnabled = false
+    -- restore default
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = defaultWalkSpeed
+        end
+    end
+end
+
+local function turnOffNoclip()
+    if NoclipConn then
+        NoclipConn:Disconnect()
+        NoclipConn = nil
+    end
+    -- restore collisions
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 --------------------------------------------------------------------------------
 -- Exposed Table
 --------------------------------------------------------------------------------
@@ -361,6 +394,15 @@ end
 --------------------------------------------------------------------------------
 function M.PlaceholderButton()
     print("[Functions] Placeholder button clicked.")
+end
+
+function M.StopAll()
+    -- turn off flight, walk speed, noclip, etc.
+    turnOffFly()
+    turnOffWalkSpeed()
+    turnOffNoclip()
+    -- If you have other features that need to be cleaned up, do them here
+    warn("[ApocFunctions] All features forcibly stopped.")
 end
 
 --------------------------------------------------------------------------------
