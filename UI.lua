@@ -3238,80 +3238,114 @@ for i, v in pairs(UILibNames) do
 end
 
 function UILibrary.new(gameName, userId, rank)
+    -- Create a named ScreenGui so we can find it easily
     local GUI = Instance.new("ScreenGui")
-    GUI.Name = HttpService:GenerateGUID(false)
-    GUI.Parent =
-        RunService:IsStudio() == false and game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+    GUI.Name = "HydraUILib"
+    GUI.Parent = game:GetService("CoreGui")  -- or PlayerGui
     GUI.ResetOnSpawn = false
     GUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
+    -- Build the main window object
     local window = objectGenerator.new("Window")
     window.Parent = GUI
 
-    --// make UI draggable
-    -->> LogoHitbox
+    -- Make it draggable by the logo or whichever portion
+    local dragFrame = Instance.new("Frame")
+    dragFrame.BackgroundTransparency = 1
+    dragFrame.Size = UDim2.fromScale(2, 2)
+    dragFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    dragFrame.Position = UDim2.fromScale(0.5, 0.5)
+    dragFrame.Parent = window.MainUI.Sidebar.ContentHolder.Cheats.Logo
 
-    local Frame = Instance.new("Frame")
-    Frame.BackgroundTransparency = 1
-    Frame.Size = UDim2.fromScale(2, 2)
+    local DraggableAPI = Draggable.Drag(window.MainUI, dragFrame)
 
-    Frame.AnchorPoint = Vector2.new(0.5, 0.5)
-    Frame.Position = UDim2.fromScale(.5, .5)
-
-    local AspectRatio = Instance.new("UIAspectRatioConstraint", Frame)
-    AspectRatio.AspectRatio = 1.2
-
-    Frame.Parent = window.MainUI.Sidebar.ContentHolder.Cheats.Logo
-    Frame.ZIndex = 300
-
-    local Drag = Draggable.Drag(window.MainUI, Frame)
-
-    --// Customize the GUI
+    -- Basic watermark or user info
     window.Watermark.Text = ("RobuxFarm.Kero | %s | %s"):format(userId, gameName)
     local userinfo = window.MainUI.Sidebar.ContentHolder.UserInfo.Content
     userinfo.Rank.Text = rank
-    userinfo.Title.Text = userId
-    --//close/minimize buttons
-    do
-        local closeButton = Instance.new("ImageButton")
-        closeButton.Name = "CloseButton"
-        closeButton.Image = "rbxassetid://7072725342"
-        closeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
-        closeButton.Size = UDim2.new(0, 20, 0, 20)
-        closeButton.Position = UDim2.new(1, -25, 0, 5)
-        closeButton.ZIndex = 300
-        closeButton.BackgroundTransparency = 1
-        closeButton.Parent = window.MainUI
+    userinfo.Title.Text = tostring(userId)
 
-        local minimizeButton = Instance.new("ImageButton")
-        minimizeButton.Name = "MinimizeButton"
-        minimizeButton.Image = "rbxassetid://7072706663"
-        minimizeButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
-        minimizeButton.Size = UDim2.new(0, 20, 0, 20)
-        minimizeButton.Position = UDim2.new(1, -50, 0, 5)
-        minimizeButton.ZIndex = 300
-        minimizeButton.BackgroundTransparency = 1
-        minimizeButton.Parent = window.MainUI
+    -- Add the close & minimize
+    local closeButton = Instance.new("ImageButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Image = "rbxassetid://7072725342"
+    closeButton.ImageColor3 = Color3.fromRGB(200,200,200)
+    closeButton.Size = UDim2.new(0,20, 0,20)
+    closeButton.Position = UDim2.new(1, -25, 0, 5)
+    closeButton.ZIndex = 300
+    closeButton.BackgroundTransparency = 1
+    closeButton.Parent = window.MainUI
 
-        -- Close button: hide UI
-        closeButton.MouseButton1Click:Connect(function()
-            window.MainUI.Visible = false
-        end)
+    local minimizeButton = Instance.new("ImageButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Image = "rbxassetid://7072706663"
+    minimizeButton.ImageColor3 = Color3.fromRGB(200,200,200)
+    minimizeButton.Size = UDim2.new(0,20, 0,20)
+    minimizeButton.Position = UDim2.new(1, -50, 0, 5)
+    minimizeButton.ZIndex = 300
+    minimizeButton.BackgroundTransparency = 1
+    minimizeButton.Parent = window.MainUI
 
-        -- Minimize button: toggle between normal size and just a small bar
-        local minimized = false
-        local originalSize = window.MainUI.Size
-        minimizeButton.MouseButton1Click:Connect(function()
-            minimized = not minimized
-            if minimized then
-                -- reduce to a small top bar
-                window.MainUI.Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40)
-            else
-                window.MainUI.Size = originalSize
+    local minimized = false
+    local originalPos = window.MainUI.Position
+    local originalSize = window.MainUI.Size
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            -- Move to top-left
+            window.MainUI.Position = UDim2.fromOffset(0, 0)
+            -- A smaller size that basically shows only the sidebar’s width & a short height
+            window.MainUI.Size = UDim2.new(0, 220, 0, 60)
+
+            -- Hide the main content except the logo or whatever you want
+            -- The easiest is to hide the entire "Content" frame and user info
+            if window.MainUI.Content then
+                window.MainUI.Content.Visible = false
             end
-        end)
-    end
+            if window.MainUI.Sidebar.ContentHolder.UserInfo then
+                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = false
+            end
+            if window.MainUI.Sidebar.ContentHolder.Cheats then
+                -- We want to show only the logo, so let's hide sub-objects except the logo
+                -- But "Logo" is a child of "Cheats", so let's do:
+                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+                    if child.Name ~= "Logo" then
+                        child.Visible = false
+                    end
+                end
+            end
+        else
+            -- restore
+            window.MainUI.Position = originalPos
+            window.MainUI.Size = originalSize
 
+            if window.MainUI.Content then
+                window.MainUI.Content.Visible = true
+            end
+            if window.MainUI.Sidebar.ContentHolder.UserInfo then
+                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = true
+            end
+            if window.MainUI.Sidebar.ContentHolder.Cheats then
+                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+                    child.Visible = true
+                end
+            end
+        end
+    end)
+
+    -- When close is pressed, destroy everything and wipe ApocFunctions
+    closeButton.MouseButton1Click:Connect(function()
+        -- Wipe out ApocFunctions
+        if getgenv().ApocFunctions then
+            for k in pairs(getgenv().ApocFunctions) do
+                getgenv().ApocFunctions[k] = nil
+            end
+        end
+        -- Destroy the entire UI (this effectively kills all connected events in the UI library)
+        GUI:Destroy()
+        warn("[UI] All scripts & UI terminated by Close button.")
+    end)
     return setmetatable(
         {
             UI = {},
