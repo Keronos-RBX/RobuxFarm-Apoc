@@ -1,4 +1,3 @@
---// Functions.lua
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
 local Players = game:GetService("Players")
@@ -25,9 +24,8 @@ local vehicleflyspeed = 1
 local walkSpeedEnabled = false
 local desiredWalkSpeed = 16  -- For toggling WalkSpeed
 local defaultWalkSpeed = 16  -- Usually Roblox default
-local NoclipConn
 
--- Connections for fly
+local Noclipping
 local flyKeyDown, flyKeyUp
 
 --------------------------------------------------------------------------------
@@ -60,7 +58,6 @@ end
 -- Fly routines
 --------------------------------------------------------------------------------
 local function sFLY(vfly)
-    -- Wait until character & root exist
     while not (LocalPlayer
         and LocalPlayer.Character
         and getRoot(LocalPlayer.Character)
@@ -81,7 +78,6 @@ local function sFLY(vfly)
     local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
     local SPEED = 0
 
-    -- Create BodyGyro/BodyVelocity
     local BG = Instance.new("BodyGyro")
     local BV = Instance.new("BodyVelocity")
     BG.P = 9e4
@@ -100,10 +96,7 @@ local function sFLY(vfly)
 
     task.spawn(function()
         while FLYING and task.wait() do
-            if (CONTROL.F + CONTROL.B) ~= 0
-               or (CONTROL.L + CONTROL.R) ~= 0
-               or (CONTROL.Q + CONTROL.E) ~= 0
-            then
+            if (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
                 SPEED = 50
             else
                 SPEED = 0
@@ -178,14 +171,15 @@ local function NOFLY()
     end)
 end
 
+--------------------------------------------------------------------------------
+-- Turn Off Routines
+--------------------------------------------------------------------------------
 local function turnOffFly()
-    FLYING = false
-    -- disconnect any old connections, revert humanoid, etc.
+    NOFLY()
 end
 
 local function turnOffWalkSpeed()
     walkSpeedEnabled = false
-    -- restore default
     local char = LocalPlayer.Character
     if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -196,11 +190,10 @@ local function turnOffWalkSpeed()
 end
 
 local function turnOffNoclip()
-    if NoclipConn then
-        NoclipConn:Disconnect()
-        NoclipConn = nil
+    if Noclipping then
+        Noclipping:Disconnect()
+        Noclipping = nil
     end
-    -- restore collisions
     local char = LocalPlayer.Character
     if char then
         for _, part in ipairs(char:GetDescendants()) do
@@ -210,16 +203,16 @@ local function turnOffNoclip()
         end
     end
 end
+
 --------------------------------------------------------------------------------
 -- Exposed Table
 --------------------------------------------------------------------------------
 local M = {}
 
 --------------------------------------------------------------------------------
--- WALKSPEED TOGGLE & SET
+-- WALKSPEED
 --------------------------------------------------------------------------------
 function M.WalkSpeedToggle(inputSpeed)
-    -- If already on, turn off
     if walkSpeedEnabled then
         disableWalkSpeed()
     else
@@ -228,11 +221,11 @@ function M.WalkSpeedToggle(inputSpeed)
 end
 
 function M.SetWalkSpeed(speed)
-    enableWalkSpeed(speed or 16)  -- forcibly sets it, leaving the toggle ON
+    enableWalkSpeed(speed or 16)
 end
 
 --------------------------------------------------------------------------------
--- SET FLY SPEED
+-- FLY
 --------------------------------------------------------------------------------
 function M.SetFlySpeed(newSpeed)
     local num = tonumber(newSpeed) or 1
@@ -240,9 +233,6 @@ function M.SetFlySpeed(newSpeed)
     print("[Functions] Fly speed set to:", num)
 end
 
---------------------------------------------------------------------------------
--- FlyToggle
---------------------------------------------------------------------------------
 function M.FlyToggle()
     if FLYING then
         NOFLY()
@@ -254,14 +244,12 @@ function M.FlyToggle()
 end
 
 --------------------------------------------------------------------------------
--- NOCLIP TOGGLE
+-- NOCLIP
 --------------------------------------------------------------------------------
 local Clip = true
-local Noclipping
-
 local function StartNoclip()
     Clip = false
-    local function NoclipLoop()
+    Noclipping = RunService.Stepped:Connect(function()
         local character = LocalPlayer.Character
         if not Clip and character then
             for _, child in pairs(character:GetDescendants()) do
@@ -270,8 +258,7 @@ local function StartNoclip()
                 end
             end
         end
-    end
-    Noclipping = RunService.Stepped:Connect(NoclipLoop)
+    end)
     print("[Functions] Noclip Enabled.")
 end
 
@@ -301,7 +288,7 @@ function M.NoclipToggle()
 end
 
 --------------------------------------------------------------------------------
--- TELEPORT TO COORDINATES
+-- TELEPORTS
 --------------------------------------------------------------------------------
 function M.TeleportToCoordinates(vec3)
     local char = LocalPlayer.Character
@@ -313,9 +300,6 @@ function M.TeleportToCoordinates(vec3)
     end
 end
 
---------------------------------------------------------------------------------
--- TELEPORT TO PLAYER
---------------------------------------------------------------------------------
 function M.TeleportToPlayer(playerName)
     local targetPlr = Players:FindFirstChild(playerName)
     if targetPlr
@@ -334,7 +318,7 @@ function M.TeleportToPlayer(playerName)
 end
 
 --------------------------------------------------------------------------------
--- FIX BROKEN LEG (Example)
+-- MISC EXAMPLES
 --------------------------------------------------------------------------------
 function M.FixBrokenLeg()
     local char = LocalPlayer.Character
@@ -347,9 +331,6 @@ function M.FixBrokenLeg()
     end
 end
 
---------------------------------------------------------------------------------
--- RAGDOLL YOURSELF
---------------------------------------------------------------------------------
 function M.RagdollSelf()
     local char = LocalPlayer.Character
     if char then
@@ -361,9 +342,6 @@ function M.RagdollSelf()
     end
 end
 
---------------------------------------------------------------------------------
--- DAMAGE YOURSELF
---------------------------------------------------------------------------------
 function M.DamageSelf(amount)
     local char = LocalPlayer.Character
     if char then
@@ -375,38 +353,29 @@ function M.DamageSelf(amount)
     end
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER KEYBIND
---------------------------------------------------------------------------------
 function M.PlaceholderKeybind(key)
     print("[Functions] Placeholder keybind triggered:", key)
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER TOGGLE
---------------------------------------------------------------------------------
 function M.PlaceholderToggle(state)
     print("[Functions] Placeholder toggle changed:", state)
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER BUTTON
---------------------------------------------------------------------------------
 function M.PlaceholderButton()
     print("[Functions] Placeholder button clicked.")
 end
 
+--------------------------------------------------------------------------------
+-- STOP ALL
+--------------------------------------------------------------------------------
 function M.StopAll()
-    -- turn off flight, walk speed, noclip, etc.
     turnOffFly()
     turnOffWalkSpeed()
     turnOffNoclip()
-    -- If you have other features that need to be cleaned up, do them here
+    -- Add any other toggles you might need
     warn("[ApocFunctions] All features forcibly stopped.")
 end
 
---------------------------------------------------------------------------------
--- Expose M in getgenv().ApocFunctions
 --------------------------------------------------------------------------------
 for k,v in pairs(M) do
     getgenv().ApocFunctions[k] = v
