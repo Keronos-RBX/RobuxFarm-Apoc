@@ -381,12 +381,12 @@ end
 getgenv().ApocFunctions.AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
 
 -- A function to register a new keybind connection
-function getgenv().ApocFunctions.RegisterKeybindConnection(conn)
+getgenv().ApocFunctions.RegisterKeybindConnection = function(conn)
     table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
 end
 
 -- Edit your existing StopAll() to disconnect keybinds:
-function getgenv().ApocFunctions.StopAll()
+getgenv().ApocFunctions.StopAll = function()
     -- (Your existing code that turns off fly, noclip, etc. stays here)
 
     -- Now disconnect all keybind connections as well:
