@@ -285,7 +285,7 @@ local function getObjGen()
                 UIPadding_14 = Instance.new("UIPadding"),
                 Notification_3 = Instance.new("Frame"),
                 UICorner_23 = Instance.new("UICorner"),
-                UIAspectRatioConstraint_17 = Instance.new("UIAspectRatioConstraint")
+                UIAspectRatioConstraint_17 = Instance.new("UIAspectRatioConstraint"),
                 Gui = {}
             }
 
