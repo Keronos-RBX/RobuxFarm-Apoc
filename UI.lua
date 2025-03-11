@@ -1,6 +1,6 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 print("Loading v1.01 of ui lib - Keronos")
-print("This is patch 0.010 of the Ui Lib")
+print("This is patch 0.011 of the Ui Lib")
 
 local UILibrary = {}
 --// Modules
