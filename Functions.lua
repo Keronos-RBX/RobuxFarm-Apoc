@@ -1,13 +1,13 @@
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
 
 local CoreGui = game:GetService("CoreGui")
-local CurrentID = CoreGui:FindFirstChild("UI-Id")
-if CurrentID:GetAttribute("InstanceID") ~= CurrentID then
+local CurrentID = CoreGui:FindFirstChild("UI-Id"):GetAttribute("InstanceID")
+if getgenv().UIIdentifier ~= CurrentID then
     print(CurrentID)
     error("Mismatching instance id's, stopping function")
 end
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.004")
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.005")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
