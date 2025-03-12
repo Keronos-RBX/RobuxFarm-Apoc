@@ -1,5 +1,5 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.019")
+print("Loading v1.01 of ui lib - Keronos | Patch 0.020")
 
 local UILibrary = {}
 --// Modules
@@ -3277,12 +3277,19 @@ function UILibrary.new(gameName, userId, rank)
     local function doMinimize()
         minimized = not minimized
 
-        if minimized then
-            -- Move or shrink the mainFrame
-            mainFrame.Position = UDim2.fromScale(0.7, 0.2)
-            mainFrame.Size = UDim2.new(0,10, 0,10)
+        -- The factor by which non-excluded UI elements will be shrunk
+        local scaleFactor = 0.1
 
-            -- Hide ALL GuiObject descendants EXCEPT mainFrame itself, closeButton, minimizeButton, and logo
+        if minimized then
+            -- Keep mainFrame’s position but shrink its size a bit
+            mainFrame.Size = UDim2.new(
+                mainFrame.Size.X.Scale * scaleFactor, 
+                mainFrame.Size.X.Offset * scaleFactor, 
+                mainFrame.Size.Y.Scale * scaleFactor, 
+                mainFrame.Size.Y.Offset * scaleFactor
+            )
+
+            -- Scale down all GuiObjects except the mainFrame, closeButton, minimizeButton, and Logo
             for _, obj in ipairs(mainFrame:GetDescendants()) do
                 if obj:IsA("GuiObject")
                 and obj ~= mainFrame
@@ -3290,47 +3297,31 @@ function UILibrary.new(gameName, userId, rank)
                 and obj ~= minimizeButton
                 and obj ~= Logo
                 then
-                    obj.Visible = false
+                    -- Store the original size so we can restore it later
+                    if not obj:GetAttribute("OriginalSize") then
+                        obj:SetAttribute("OriginalSize", obj.Size)
+                    end
+
+                    local originalSize = obj:GetAttribute("OriginalSize")
+                    if originalSize then
+                        local newXScale = originalSize.X.Scale * scaleFactor
+                        local newXOffset = originalSize.X.Offset * scaleFactor
+                        local newYScale = originalSize.Y.Scale * scaleFactor
+                        local newYOffset = originalSize.Y.Offset * scaleFactor
+                        obj.Size = UDim2.new(newXScale, newXOffset, newYScale, newYOffset)
+                    end
                 end
             end
-
-            -- Position close/minimize/logo near the newly minimized mainFrame
-            closeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 0)
-            minimizeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 30)
-            Logo.Position = mainFrame.Position + UDim2.new(0, 20, 0, 60)
-
-            -- Make their backgrounds visible and match the main UI color
-            local bgColor = mainFrame.BackgroundColor3
-            closeButton.BackgroundTransparency = 0
-            closeButton.BackgroundColor3 = bgColor
-            
-            minimizeButton.BackgroundTransparency = 0
-            minimizeButton.BackgroundColor3 = bgColor
-            
-            Logo.BackgroundTransparency = 0
-            Logo.BackgroundColor3 = bgColor
-
         else
-            -- Restore the mainFrame to its original position/size
-            mainFrame.Position = originalPos
+            -- Restore mainFrame size
             mainFrame.Size = originalSize
 
-            -- Show ALL child GuiObjects again
+            -- Restore each child’s original size
             for _, obj in ipairs(mainFrame:GetDescendants()) do
-                if obj:IsA("GuiObject") then
-                    obj.Visible = true
+                if obj:IsA("GuiObject") and obj:GetAttribute("OriginalSize") then
+                    obj.Size = obj:GetAttribute("OriginalSize")
                 end
             end
-
-            -- Move close/minimize/logo back to their original positions
-            closeButton.Position = originalClosePos
-            minimizeButton.Position = originalMinimizePos
-            Logo.Position = originalLogoPos
-
-            -- Make their backgrounds invisible again
-            closeButton.BackgroundTransparency = 1
-            minimizeButton.BackgroundTransparency = 1
-            Logo.BackgroundTransparency = 1
         end
     end
     -- e.g. close button
