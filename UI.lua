@@ -1,6 +1,6 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 print("Loading v1.01 of ui lib - Keronos")
-print("This is patch 0.017 of the Ui Lib")
+print("This is patch 0.018 of the Ui Lib")
 
 local UILibrary = {}
 --// Modules
@@ -3268,7 +3268,7 @@ function UILibrary.new(gameName, userId, rank)
     minimizeButton.Parent = mainFrame.MainUI
 
     local minimized = false
-    local Logo = HydraUILib.MainContainer.MainUI.Sidebar.Cheats.Logo
+    local Logo = mainFrame.MainUI.Sidebar.Cheats.Logo
     local originalPos = mainFrame.Position
     local originalSize = mainFrame.Size
     local originalClosePos = closeButton.Position
