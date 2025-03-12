@@ -1,11 +1,13 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.003")
+print("Running v1.01 of the .kero UI | patch 0.004")
 
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+local IdPart = CoreGui:FindFirstChild("UI-Id")
+if IdPart then IdPart:Destroy() end
 local Identifier = Instance.new("Part")
 Identifier.Name = "UI-Id"
 Identifier.Parent = game:GetService("CoreGui")
@@ -21,7 +23,8 @@ task.spawn(function()
             getgenv().ApocFunctions.StopAll()
         end
         --
-        Identifier:Destroy()
+        if Identifier then Identifier:Destroy() end
+        if Window then Window:Destroy() end
         -- End the script forcibly
         error("Script forcibly ended because new UI instance overrode the old one.")
     end
@@ -42,9 +45,7 @@ end)
 -- 2) If ApocFunctions not loaded, load it
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
     -- 
-    getgenv().ApocFunctions = loadstring(
-        game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua")
-    )()
+    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
 end
 local Functions = getgenv().ApocFunctions
 
