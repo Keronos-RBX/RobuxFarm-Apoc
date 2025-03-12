@@ -3247,61 +3247,9 @@ function UILibrary.new(gameName, userId, rank)
     local mainFrame = objectGenerator.new("MainContainer")
     mainFrame.Parent = GUI
 
-    local closeButton = Instance.new("ImageButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Image = "rbxassetid://7072725342"
-    closeButton.ImageColor3 = Color3.fromRGB(200,200,200)
-    closeButton.Size = UDim2.new(0,20, 0,20)
-    closeButton.Position = UDim2.new(1, -25, 0, 5)
-    closeButton.ZIndex = 300
-    closeButton.BackgroundTransparency = 1
-    closeButton.Parent = mainFrame.MainUI
-
-    local minimizeButton = Instance.new("ImageButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Image = "rbxassetid://7072706663"
-    minimizeButton.ImageColor3 = Color3.fromRGB(200,200,200)
-    minimizeButton.Size = UDim2.new(0,20, 0,20)
-    minimizeButton.Position = UDim2.new(1, -50, 0, 5)
-    minimizeButton.ZIndex = 300
-    minimizeButton.BackgroundTransparency = 1
-    minimizeButton.Parent = mainFrame.MainUI
-
-    local minimized = false
-    local originalPos = mainFrame.Position
-    local originalSize = mainFrame.Size
-
-    local function doMinimize()
-        minimized = not minimized
-        if minimized then
-            mainFrame.Position = UDim2.fromScale(0.7,0.2)
-            mainFrame.Size = UDim2.new(0,10,0,10)
-            -- Hide or collapse the rest
-        else
-            mainFrame.Position = originalPos
-            mainFrame.Size = originalSize
-            -- Show it again
-        end
-    end
-
-    -- e.g. close button
-    closeButton.MouseButton1Click:Connect(function()
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-        GUI:Destroy()
-        error("UI closed and script forcibly ended.")
-    end)
-
-    minimizeButton.MouseButton1Click:Connect(function()
-        doMinimize(not minimized)
-    end)
-
     -- Return a table so "Window" is the metatable
     return setmetatable({
         MainUI = mainFrame,
-        minimized = minimized,
-        doMinimize = doMinimize,
         -- you can store gameName/userId/rank here too
         gameName = gameName,
         userId = userId,
@@ -5187,10 +5135,6 @@ function UILibrary.Section:Slider(sett, callback)
         ][sett.Title] = meta
 
     return meta
-end
-
-function UILibrary.MainContainer:ToggleMinimize()
-    self.doMinimize()
 end
 
 function UILibrary.Section:Dropdown(sett, callback)
