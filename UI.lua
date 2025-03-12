@@ -3274,16 +3274,30 @@ function UILibrary.new(gameName, userId, rank)
     local function doMinimize()
         minimized = not minimized
         if minimized then
+            -- Shrink or move the main frame (whatever you're doing now)
             mainFrame.Position = UDim2.fromScale(0.7,0.2)
             mainFrame.Size = UDim2.new(0,10,0,10)
-            -- Hide or collapse the rest
+            
+            -- Toggle the UI elements OFF
+            for _, obj in ipairs(mainFrame:GetDescendants()) do
+                if obj:IsA("GuiObject") and obj ~= mainFrame then
+                    obj.Visible = false
+                end
+            end
+            
         else
+            -- Restore the main frame back to its original pos/size
             mainFrame.Position = originalPos
             mainFrame.Size = originalSize
-            -- Show it again
+            
+            -- Toggle the UI elements ON
+            for _, obj in ipairs(mainFrame:GetDescendants()) do
+                if obj:IsA("GuiObject") then
+                    obj.Visible = true
+                end
+            end
         end
     end
-
     -- e.g. close button
     closeButton.MouseButton1Click:Connect(function()
         if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
