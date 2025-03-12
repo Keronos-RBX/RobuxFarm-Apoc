@@ -25,8 +25,9 @@ task.spawn(function()
         --
         if Identifier then Identifier:Destroy() end
         if Window then Window:Destroy() end
-        -- End the script forcibly
-        error("Script forcibly ended because new UI instance overrode the old one.")
+        -- End the scripts forcibly
+        Functions.disableFunctions()
+        error("Script forcibly ended because new UI instance overrode the old one.") -- keep as last
     end
 
     while task.wait(2) do
@@ -251,7 +252,7 @@ local SettingsSection = SettingsSub:Section("UI Behavior", "Left")
 SettingsSection:Keybind({
     Title = "Minimize UI",
     Description = "Minimize or restore the UI",
-    Default = Enum.KeyCode.M,
+    Default = Enum.KeyCode.\,
 }, function()
     Window:ToggleMinimize() -- Now works properly
 end)
@@ -264,11 +265,10 @@ local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
 
 CreditsSection:Button({
-    Title = "UI by Hydra",
-    ButtonName = "Thanks",
-    Description = "Thank you Hydra UI Lib!",
+    Title = "UI by Hydra, Optimizations/Additional Features by Realuid",
+    ButtonName = "TY",
+    Description = "Give thanks",
 }, function()
-    print("[Credits] Hydra UI Lib clicked!")
+    print("Thank YOU for supporting this project :)")
 end)
-
 
