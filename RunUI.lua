@@ -1,5 +1,5 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.004")
+print("Running v1.01 of the .kero UI | patch 0.005")
 
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
@@ -270,3 +270,5 @@ CreditsSection:Button({
 }, function()
     print("[Credits] Hydra UI Lib clicked!")
 end)
+
+
