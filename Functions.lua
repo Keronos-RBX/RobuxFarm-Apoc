@@ -374,7 +374,11 @@ function M.StopAll()
     turnOffWalkSpeed()
     turnOffNoclip()
     -- Add any other toggles you might need
-    warn("[ApocFunctions] All features forcibly stopped.")
+    warn("[Functions] All features forcibly stopped.")
+end
+
+function M.disableFunctions()
+    error("[Functions] Disabling functions purposefully")
 end
 
 -- Make a table to hold references to keybind connections
