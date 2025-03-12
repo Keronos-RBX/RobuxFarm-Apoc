@@ -1,6 +1,6 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
 print("Loading v1.01 of ui lib - Keronos")
-print("This is patch 0.012 of the Ui Lib")
+print("This is patch 0.015 of the Ui Lib")
 
 local UILibrary = {}
 --// Modules
@@ -3272,7 +3272,7 @@ function UILibrary.new(gameName, userId, rank)
     local originalSize = mainFrame.Size
     local originalClosePos = closeButton.Position
     local originalMinimizePos = minimizeButton.Position
-    local originalLogoPos = logo.Position
+    local originalLogoPos = Logo.Position
 
     local function doMinimize()
         minimized = not minimized
@@ -3288,7 +3288,7 @@ function UILibrary.new(gameName, userId, rank)
                 and obj ~= mainFrame
                 and obj ~= closeButton
                 and obj ~= minimizeButton
-                and obj ~= logo
+                and obj ~= Logo
                 then
                     obj.Visible = false
                 end
@@ -3297,7 +3297,7 @@ function UILibrary.new(gameName, userId, rank)
             -- Position close/minimize/logo near the newly minimized mainFrame
             closeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 0)
             minimizeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 30)
-            logo.Position = mainFrame.Position + UDim2.new(0, 20, 0, 60)
+            Logo.Position = mainFrame.Position + UDim2.new(0, 20, 0, 60)
 
             -- Make their backgrounds visible and match the main UI color
             local bgColor = mainFrame.BackgroundColor3
@@ -3307,8 +3307,8 @@ function UILibrary.new(gameName, userId, rank)
             minimizeButton.BackgroundTransparency = 0
             minimizeButton.BackgroundColor3 = bgColor
             
-            logo.BackgroundTransparency = 0
-            logo.BackgroundColor3 = bgColor
+            Logo.BackgroundTransparency = 0
+            Logo.BackgroundColor3 = bgColor
 
         else
             -- Restore the mainFrame to its original position/size
@@ -3325,12 +3325,12 @@ function UILibrary.new(gameName, userId, rank)
             -- Move close/minimize/logo back to their original positions
             closeButton.Position = originalClosePos
             minimizeButton.Position = originalMinimizePos
-            logo.Position = originalLogoPos
+            Logo.Position = originalLogoPos
 
             -- Make their backgrounds invisible again
             closeButton.BackgroundTransparency = 1
             minimizeButton.BackgroundTransparency = 1
-            logo.BackgroundTransparency = 1
+            Logo.BackgroundTransparency = 1
         end
     end
     -- e.g. close button
