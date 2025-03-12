@@ -3270,32 +3270,67 @@ function UILibrary.new(gameName, userId, rank)
     local minimized = false
     local originalPos = mainFrame.Position
     local originalSize = mainFrame.Size
+    local originalClosePos = closeButton.Position
+    local originalMinimizePos = minimizeButton.Position
+    local originalLogoPos = logo.Position
 
     local function doMinimize()
         minimized = not minimized
+
         if minimized then
-            -- Shrink or move the main frame (whatever you're doing now)
-            mainFrame.Position = UDim2.fromScale(0.7,0.2)
-            mainFrame.Size = UDim2.new(0,10,0,10)
-            
-            -- Toggle the UI elements OFF
+            -- Move or shrink the mainFrame
+            mainFrame.Position = UDim2.fromScale(0.7, 0.2)
+            mainFrame.Size = UDim2.new(0,10, 0,10)
+
+            -- Hide ALL GuiObject descendants EXCEPT mainFrame itself, closeButton, minimizeButton, and logo
             for _, obj in ipairs(mainFrame:GetDescendants()) do
-                if obj:IsA("GuiObject") and obj ~= mainFrame then
+                if obj:IsA("GuiObject")
+                and obj ~= mainFrame
+                and obj ~= closeButton
+                and obj ~= minimizeButton
+                and obj ~= logo
+                then
                     obj.Visible = false
                 end
             end
+
+            -- Position close/minimize/logo near the newly minimized mainFrame
+            closeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 0)
+            minimizeButton.Position = mainFrame.Position + UDim2.new(0, 20, 0, 30)
+            logo.Position = mainFrame.Position + UDim2.new(0, 20, 0, 60)
+
+            -- Make their backgrounds visible and match the main UI color
+            local bgColor = mainFrame.BackgroundColor3
+            closeButton.BackgroundTransparency = 0
+            closeButton.BackgroundColor3 = bgColor
             
+            minimizeButton.BackgroundTransparency = 0
+            minimizeButton.BackgroundColor3 = bgColor
+            
+            logo.BackgroundTransparency = 0
+            logo.BackgroundColor3 = bgColor
+
         else
-            -- Restore the main frame back to its original pos/size
+            -- Restore the mainFrame to its original position/size
             mainFrame.Position = originalPos
             mainFrame.Size = originalSize
-            
-            -- Toggle the UI elements ON
+
+            -- Show ALL child GuiObjects again
             for _, obj in ipairs(mainFrame:GetDescendants()) do
                 if obj:IsA("GuiObject") then
                     obj.Visible = true
                 end
             end
+
+            -- Move close/minimize/logo back to their original positions
+            closeButton.Position = originalClosePos
+            minimizeButton.Position = originalMinimizePos
+            logo.Position = originalLogoPos
+
+            -- Make their backgrounds invisible again
+            closeButton.BackgroundTransparency = 1
+            minimizeButton.BackgroundTransparency = 1
+            logo.BackgroundTransparency = 1
         end
     end
     -- e.g. close button
