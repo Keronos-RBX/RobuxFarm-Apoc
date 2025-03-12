@@ -3271,11 +3271,11 @@ function UILibrary.new(gameName, userId, rank)
     local originalPos = mainFrame.Position
     local originalSize = mainFrame.Size
 
-    local function doMinimize(newState)
-        minimized = newState
+    local function doMinimize()
+        minimized = not minimized
         if minimized then
             mainFrame.Position = UDim2.fromScale(0.7,0.2)
-            mainFrame.Size = UDim2.new(0,220,0,60)
+            mainFrame.Size = UDim2.new(0,10,0,10)
             -- Hide or collapse the rest
         else
             mainFrame.Position = originalPos
@@ -5190,7 +5190,7 @@ function UILibrary.Section:Slider(sett, callback)
 end
 
 function UILibrary.MainContainer:ToggleMinimize()
-    self.doMinimize(not self.minimized)
+    self.doMinimize()
 end
 
 function UILibrary.Section:Dropdown(sett, callback)
