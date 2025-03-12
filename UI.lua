@@ -3325,7 +3325,7 @@ function UILibrary.new(gameName, userId, rank)
         end
     end
     
-    local function stopScript()
+     function UILibrary.stopScript()
         if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
             getgenv().ApocFunctions.StopAll()
         end
@@ -3334,7 +3334,11 @@ function UILibrary.new(gameName, userId, rank)
     end
 
     closeButton.MouseButton1Click:Connect(function()
-        stopScript()
+        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+            getgenv().ApocFunctions.StopAll()
+        end
+        GUI:Destroy()
+        error("UI closed and script forcibly ended.")
     end)
 
     minimizeButton.MouseButton1Click:Connect(function()
