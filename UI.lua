@@ -3268,7 +3268,7 @@ function UILibrary.new(gameName, userId, rank)
     minimizeButton.Parent = mainFrame.MainUI
 
     local minimized = false
-    local Logo = Gui.Logo
+    local Logo = HydraUILib.MainContainer.MainUI.Sidebar.Cheats.Logo
     local originalPos = mainFrame.Position
     local originalSize = mainFrame.Size
     local originalClosePos = closeButton.Position
