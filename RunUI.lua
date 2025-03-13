@@ -1,5 +1,7 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.005")
+print("Running v1.01 of the .kero UI | patch 0.006")
+
+local runUI = {}
 
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
@@ -15,56 +17,60 @@ Identifier.Parent = game:GetService("CoreGui")
 local uniqueID = HttpService:GenerateGUID(false)
 Identifier:SetAttribute("InstanceID", uniqueID)
 
--- 3) (Optional) spawn a looping check every 2 seconds
+getgenv().UIIdentifier = Identifier:GetAttribute("InstanceID")
+print(getgenv().UIIdentifier)
+
+-- If ApocFunctions not loaded, load it
+if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
+    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
+end
+local Functions = getgenv().ApocFunctions
+--
+if not getgenv().UILib or not next(getgenv().UILib) then
+    getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
+end
+local UILib = getgenv().UILib
+
+-- Create the main window
+local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
+
+-- (Optional) spawn a looping check every 2 seconds
 task.spawn(function()
-    local function killAll()
+    function runUI.killAll()
         -- Stop features
         if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
             getgenv().ApocFunctions.StopAll()
         end
-        --
+
         if Identifier then Identifier:Destroy() end
-        if Window then Window:Destroy() end
-        -- End the scripts forcibly
-        Functions.disableFunctions()
-        error("Script forcibly ended because new UI instance overrode the old one.") -- keep as last
+        --if Window then Window:Destroy() end
+        UILib.stopScript()
+        script:Destroy()
     end
 
     while task.wait(2) do
         -- If the GUI no longer has a parent (destroyed), also stop:
         if not Identifier.Parent then
-            killAll()
+            runUI.killAll()
+            return
         end
 
         -- If the attribute got changed by a new instance, also stop:
         if Identifier:GetAttribute("InstanceID") ~= uniqueID then
-            killAll()
+            runUI.killAll()
+            return
         end
     end
 end)
 
--- 2) If ApocFunctions not loaded, load it
-if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
-    -- 
-    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
-end
-local Functions = getgenv().ApocFunctions
-
--- 3) Load the UI library 
-local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
-
--- 4) Create the main window
-local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
 
 --------------------------------------------------------------------------------
 -- “Main Features” Category
 --------------------------------------------------------------------------------
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
-
 -- Movement subcategory
 local MovementSub = Category1:Button("Movement", "rbxassetid://8395747586")
 local MovementSection = MovementSub:Section("Movement", "Left")
-
 -- Fly Keybind
 MovementSection:Keybind({
     Title = "Fly Keybind",
@@ -73,7 +79,6 @@ MovementSection:Keybind({
 }, function()
     Functions.FlyToggle()
 end)
-
 -- Flight Speed
 MovementSection:Slider({
     Title = "Flight Speed",
@@ -84,7 +89,6 @@ MovementSection:Slider({
 }, function(value)
     Functions.SetFlySpeed(value)
 end)
-
 -- WalkSpeed input
 local walkSpeedValue = 16
 MovementSection:Textbox({
@@ -97,7 +101,6 @@ MovementSection:Textbox({
         walkSpeedValue = num
     end
 end)
-
 -- WalkSpeed toggle
 local walkSpeedToggleObj
 walkSpeedToggleObj = MovementSection:Toggle({
@@ -113,7 +116,6 @@ walkSpeedToggleObj = MovementSection:Toggle({
         Functions.WalkSpeedToggle()
     end
 end)
-
 -- WalkSpeed Keybind
 MovementSection:Keybind({
     Title = "WalkSpeed Keybind",
@@ -123,13 +125,11 @@ MovementSection:Keybind({
     local current = walkSpeedToggleObj.getValue()
     walkSpeedToggleObj.setValue(not current)
 end)
-
 --------------------------------------------------------------------------------
 -- Teleportation
 --------------------------------------------------------------------------------
 local TeleportSub = Category1:Button("Teleportation", "rbxassetid://8395747586")
 local TeleportSection = TeleportSub:Section("Teleportation", "Left")
-
 TeleportSection:Textbox({
     Title = "Teleport Coordinates",
     Description = "X,Y,Z (comma or space separated)",
@@ -146,14 +146,12 @@ TeleportSection:Textbox({
         Functions.TeleportToCoordinates(Vector3.new(x,y,z))
     end
 end)
-
 -- Single-select dropdown for Teleport to Player
 local playerDict = {}
 for _,plr in ipairs(Players:GetPlayers()) do
     playerDict[plr.Name] = false
 end
 playerDict[LocalPlayer.Name] = true
-
 TeleportSection:Dropdown({
     Title = "Teleport to Player",
     Description = "Choose a player",
@@ -168,13 +166,11 @@ TeleportSection:Dropdown({
         end
     end
 end)
-
 --------------------------------------------------------------------------------
 -- Misc
 --------------------------------------------------------------------------------
 local MiscSub = Category1:Button("Misc", "rbxassetid://8395747586")
 local MiscSection = MiscSub:Section("Misc Features", "Left")
-
 -- Noclip Keybind
 MiscSection:Keybind({
     Title = "Noclip Keybind",
@@ -183,7 +179,6 @@ MiscSection:Keybind({
 }, function()
     Functions.NoclipToggle()
 end)
-
 -- Ragdoll / Fix Leg
 MiscSection:Button({
     Title = "Ragdoll Self",
@@ -192,7 +187,6 @@ MiscSection:Button({
 }, function()
     Functions.RagdollSelf()
 end)
-
 MiscSection:Button({
     Title = "Fix Broken Leg",
     ButtonName = "FIX LEG",
@@ -200,7 +194,6 @@ MiscSection:Button({
 }, function()
     Functions.FixBrokenLeg()
 end)
-
 -- Placeholder
 MiscSection:Toggle({
     Title = "Placeholder Toggle",
@@ -209,7 +202,6 @@ MiscSection:Toggle({
 }, function(state)
     Functions.PlaceholderToggle(state)
 end)
-
 MiscSection:Button({
     Title = "Placeholder Button",
     ButtonName = "DO SOMETHING",
@@ -217,13 +209,11 @@ MiscSection:Button({
 }, function()
     Functions.PlaceholderButton()
 end)
-
 --------------------------------------------------------------------------------
 -- Combat
 --------------------------------------------------------------------------------
 local CombatSub = Category1:Button("Combat", "rbxassetid://8395747586")
 local CombatSection = CombatSub:Section("Combat Tools", "Left")
-
 local dmgVal = 10
 CombatSection:Textbox({
     Title = "Damage Amount",
@@ -232,7 +222,6 @@ CombatSection:Textbox({
 }, function(val)
     dmgVal = tonumber(val) or 10
 end)
-
 CombatSection:Button({
     Title = "Apply Damage",
     ButtonName = "DAMAGE ME",
@@ -240,30 +229,26 @@ CombatSection:Button({
 }, function()
     Functions.DamageSelf(dmgVal)
 end)
-
 --------------------------------------------------------------------------------
 -- Settings
 --------------------------------------------------------------------------------
 local SettingsCategory = Window:Category("Settings", "rbxassetid://8395621517")
 local SettingsSub = SettingsCategory:Button("Settings", "rbxassetid://8395747586")
 local SettingsSection = SettingsSub:Section("UI Behavior", "Left")
-
 -- Keybind to toggle Minimize
 SettingsSection:Keybind({
     Title = "Minimize UI",
     Description = "Minimize or restore the UI",
-    Default = Enum.KeyCode.\,
+    Default = Enum.KeyCode.Equals,
 }, function()
     Window:ToggleMinimize() -- Now works properly
 end)
-
 --------------------------------------------------------------------------------
 -- Credits
 --------------------------------------------------------------------------------
 local CreditsCategory = Window:Category("Credits", "rbxassetid://8395621517")
 local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
-
 CreditsSection:Button({
     Title = "UI by Hydra, Optimizations/Additional Features by Realuid",
     ButtonName = "TY",
@@ -271,4 +256,3 @@ CreditsSection:Button({
 }, function()
     print("Thank YOU for supporting this project :)")
 end)
-
