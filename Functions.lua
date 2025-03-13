@@ -7,7 +7,7 @@ if getgenv().UIIdentifier ~= CurrentID then
     error("Mismatching instance id's, stopping function")
 end
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.005")
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.006")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
