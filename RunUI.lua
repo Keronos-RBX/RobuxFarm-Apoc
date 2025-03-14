@@ -1,8 +1,6 @@
 --// RunUI.lua
 print("Running v1.01 of the .kero UI | patch 0.006")
 
-local runUI = {}
-
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -16,6 +14,12 @@ Identifier.Parent = game:GetService("CoreGui")
 
 local uniqueID = HttpService:GenerateGUID(false)
 Identifier:SetAttribute("InstanceID", uniqueID)
+
+if Identifier:GetAttribute("InstanceID") ~= uniqueID or nil then
+    killAll()
+    print("TEST!123123")
+    return
+end
 
 getgenv().UIIdentifier = Identifier:GetAttribute("InstanceID")
 print(getgenv().UIIdentifier)
@@ -32,37 +36,36 @@ end
 local UILib = getgenv().UILib
 
 -- Create the main window
-local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
+local Window = UILib.new("Apocrypha Cheat", LocalPlayer.UserId, "Buyer")
 
--- (Optional) spawn a looping check every 2 seconds
-task.spawn(function()
-    function runUI.killAll()
-        -- Stop features
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-
-        if Identifier then Identifier:Destroy() end
-        --if Window then Window:Destroy() end
-        UILib.stopScript()
-        script:Destroy()
+function killAll()
+    -- Stop features
+    if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
+        getgenv().ApocFunctions.StopAll()
     end
 
+    if Identifier then Identifier:Destroy() end
+    --if Window then Window:Destroy() end
+    UILib.stopScript()
+    script:Destroy()
+end
+
+-- Spawn a looping check every 2 seconds
+task.spawn(function()
     while task.wait(2) do
         -- If the GUI no longer has a parent (destroyed), also stop:
         if not Identifier.Parent then
-            runUI.killAll()
+            killAll()
             return
         end
 
         -- If the attribute got changed by a new instance, also stop:
         if Identifier:GetAttribute("InstanceID") ~= uniqueID then
-            runUI.killAll()
+            killAll()
             return
         end
     end
 end)
-
 
 --------------------------------------------------------------------------------
 -- “Main Features” Category
@@ -74,7 +77,7 @@ local MovementSection = MovementSub:Section("Movement", "Left")
 -- Fly Keybind
 MovementSection:Keybind({
     Title = "Fly Keybind",
-    Description = "Toggle flight on/off",
+    Description = "Toggle flight",
     Default = Enum.KeyCode.R,
 }, function()
     Functions.FlyToggle()
@@ -119,7 +122,7 @@ end)
 -- WalkSpeed Keybind
 MovementSection:Keybind({
     Title = "WalkSpeed Keybind",
-    Description = "Toggle walk speed same as above",
+    Description = "Toggle walk speed with keybind",
     Default = Enum.KeyCode.H,
 }, function()
     local current = walkSpeedToggleObj.getValue()
@@ -174,7 +177,7 @@ local MiscSection = MiscSub:Section("Misc Features", "Left")
 -- Noclip Keybind
 MiscSection:Keybind({
     Title = "Noclip Keybind",
-    Description = "Toggle noclip on/off",
+    Description = "Toggle noclip",
     Default = Enum.KeyCode.P,
 }, function()
     Functions.NoclipToggle()
@@ -182,14 +185,14 @@ end)
 -- Ragdoll / Fix Leg
 MiscSection:Button({
     Title = "Ragdoll Self",
-    ButtonName = "RAGDOLL",
-    Description = "Makes your character ragdoll",
+    ButtonName = "Ragdoll",
+    Description = "Ragdolls you",
 }, function()
     Functions.RagdollSelf()
 end)
 MiscSection:Button({
     Title = "Fix Broken Leg",
-    ButtonName = "FIX LEG",
+    ButtonName = "Fix",
     Description = "Restore broken leg",
 }, function()
     Functions.FixBrokenLeg()
@@ -250,7 +253,7 @@ local CreditsCategory = Window:Category("Credits", "rbxassetid://8395621517")
 local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
 CreditsSection:Button({
-    Title = "UI by Hydra, Optimizations/Additional Features by Realuid",
+    Title = "UI by HydraLib, Optimizations/Additional Features by Realuid",
     ButtonName = "TY",
     Description = "Give thanks",
 }, function()
