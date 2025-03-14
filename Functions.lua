@@ -7,7 +7,7 @@ if getgenv().UIIdentifier ~= CurrentID then
     error("Mismatching instance id's, stopping function")
 end
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.007")
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.008")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -383,10 +383,10 @@ function M.disableFunctions()
 end
 
 -- Make a table to hold references to keybind connections
-getgenv().ApocFunctions.AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
+local AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
 
 -- A function to register a new keybind connection
-getgenv().ApocFunctions.RegisterKeybindConnection = function(conn)
+local RegisterKeybindConnection = function(conn)
     table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
 end
 
@@ -396,7 +396,7 @@ function M.StopAll()
     turnOffWalkSpeed()
     turnOffNoclip()
     -- Now disconnect all keybind connections as well:
-    for _, c in ipairs(getgenv().ApocFunctions.AllKeybindConns) do
+    for _, c in ipairs(AllKeybindConns) do
         c:Disconnect()
     end
     -- Clear the table so reusing is possible only if script is re-run
