@@ -1,5 +1,5 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added many features/optimizations myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.024")
+print("Loading v1.01 of ui lib - Keronos | Patch 0.025")
 
 local UILibrary = {}
 --// Modules
@@ -3333,13 +3333,11 @@ function UILibrary.new(gameName, userId, rank)
     end
 
     closeButton.MouseButton1Click:Connect(function()
-        local runUI = getgenv().runUI
-        local killAllfromUI = runUI.killAll
         if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
             getgenv().ApocFunctions.StopAll()
         end
         GUI:Destroy()
-        killAllfromUI()
+        killAll()
         error("UI closed and script forcibly ended.")
     end)
 
