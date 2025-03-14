@@ -7,7 +7,7 @@ if getgenv().UIIdentifier ~= CurrentID then
     error("Mismatching instance id's, stopping function")
 end
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.006")
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.007")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -377,13 +377,6 @@ end
 --------------------------------------------------------------------------------
 -- STOP ALL
 --------------------------------------------------------------------------------
-function M.StopAll()
-    turnOffFly()
-    turnOffWalkSpeed()
-    turnOffNoclip()
-    -- Add any other toggles you might need
-    warn("[Functions] All features forcibly stopped.")
-end
 
 function M.disableFunctions()
     error("[Functions] Disabling functions purposefully")
@@ -398,16 +391,16 @@ getgenv().ApocFunctions.RegisterKeybindConnection = function(conn)
 end
 
 -- Edit your existing StopAll() to disconnect keybinds:
-getgenv().ApocFunctions.StopAll = function()
-    -- (Your existing code that turns off fly, noclip, etc. stays here)
-
+function M.StopAll()
+    turnOffFly()
+    turnOffWalkSpeed()
+    turnOffNoclip()
     -- Now disconnect all keybind connections as well:
     for _, c in ipairs(getgenv().ApocFunctions.AllKeybindConns) do
         c:Disconnect()
     end
     -- Clear the table so reusing is possible only if script is re-run
     getgenv().ApocFunctions.AllKeybindConns = {}
-
     warn("[ApocFunctions] All features forcibly stopped, keybinds disconnected.")
 end
 
