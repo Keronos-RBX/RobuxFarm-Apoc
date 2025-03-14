@@ -1,5 +1,5 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added many features/optimizations myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.023")
+print("Loading v1.01 of ui lib - Keronos | Patch 0.024")
 
 local UILibrary = {}
 --// Modules
@@ -1290,7 +1290,7 @@ local function getObjGen()
             Gui.Rank.Size = UDim2.new(1, 0, 0.5, 0)
             Gui.Rank.ZIndex = 123
             Gui.Rank.Font = Enum.Font.Gotham
-            Gui.Rank.Text = "Admin"
+            Gui.Rank.Text = "Buyer"
             Gui.Rank.TextColor3 = Color3.fromRGB(94, 94, 94)
             Gui.Rank.TextSize = 14.000
             Gui.Rank.TextXAlignment = Enum.TextXAlignment.Left
@@ -1312,7 +1312,7 @@ local function getObjGen()
             Gui.Title_2.Size = UDim2.new(1, 0, 0.5, 0)
             Gui.Title_2.ZIndex = 123
             Gui.Title_2.Font = Enum.Font.GothamSemibold
-            Gui.Title_2.Text = "susss!!!"
+            Gui.Title_2.Text = "Keronos-UI"
             Gui.Title_2.TextColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Title_2.TextSize = 14.000
             Gui.Title_2.TextXAlignment = Enum.TextXAlignment.Left
@@ -3333,7 +3333,8 @@ function UILibrary.new(gameName, userId, rank)
     end
 
     closeButton.MouseButton1Click:Connect(function()
-        local killAllfromUI = getgenv().killAll
+        local runUI = getgenv().runUI
+        local killAllfromUI = runUI.killAll
         if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
             getgenv().ApocFunctions.StopAll()
         end
