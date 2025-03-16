@@ -7,7 +7,7 @@ if getgenv().UIIdentifier ~= CurrentID then
     error("Mismatching instance id's, stopping function")
 end
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.009")
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.010")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -402,7 +402,7 @@ function M.StopAll()
     -- Clear the table so reusing is possible only if script is re-run
     getgenv().ApocFunctions.AllKeybindConns = {}
     script:Destroy()
-    error("[Functions] All features forcibly stopped, keybinds disconnected, script disabled.")
+    --error("[Functions] All features forcibly stopped, keybinds disconnected, script disabled.")
 end
 
 
