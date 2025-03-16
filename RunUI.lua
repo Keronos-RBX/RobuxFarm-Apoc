@@ -1,5 +1,5 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.006")
+print("Running v1.01 of the .kero UI | patch 0.007")
 
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
@@ -29,6 +29,7 @@ if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
     getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
 end
 local Functions = getgenv().ApocFunctions
+
 --
 if not getgenv().UILib or not next(getgenv().UILib) then
     getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
@@ -43,11 +44,16 @@ function killAll()
     if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
         getgenv().ApocFunctions.StopAll()
     end
-
+    print("test123")
     if Identifier then Identifier:Destroy() end
-    --if Window then Window:Destroy() end
-    UILib.stopScript()
+    
+    ----------------------------------------------------------------
+    -- IMPORTANT: UNCOMMENT OR ADD THIS LINE SO THE OLD WINDOW CLOSES:
+    if Window then Window:Destroy() end
+    ----------------------------------------------------------------
+    
     script:Destroy()
+    error("Ending all current script execution")
 end
 
 -- Spawn a looping check every 2 seconds
@@ -55,12 +61,14 @@ task.spawn(function()
     while task.wait(2) do
         -- If the GUI no longer has a parent (destroyed), also stop:
         if not Identifier.Parent then
+            UILib.stopScript()
             killAll()
             return
         end
 
         -- If the attribute got changed by a new instance, also stop:
         if Identifier:GetAttribute("InstanceID") ~= uniqueID then
+            UILib.stopScript()
             killAll()
             return
         end
@@ -71,9 +79,11 @@ end)
 -- “Main Features” Category
 --------------------------------------------------------------------------------
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
+
 -- Movement subcategory
 local MovementSub = Category1:Button("Movement", "rbxassetid://8395747586")
 local MovementSection = MovementSub:Section("Movement", "Left")
+
 -- Fly Keybind
 MovementSection:Keybind({
     Title = "Fly Keybind",
@@ -82,6 +92,7 @@ MovementSection:Keybind({
 }, function()
     Functions.FlyToggle()
 end)
+
 -- Flight Speed
 MovementSection:Slider({
     Title = "Flight Speed",
@@ -92,6 +103,7 @@ MovementSection:Slider({
 }, function(value)
     Functions.SetFlySpeed(value)
 end)
+
 -- WalkSpeed input
 local walkSpeedValue = 16
 MovementSection:Textbox({
@@ -104,6 +116,7 @@ MovementSection:Textbox({
         walkSpeedValue = num
     end
 end)
+
 -- WalkSpeed toggle
 local walkSpeedToggleObj
 walkSpeedToggleObj = MovementSection:Toggle({
@@ -119,6 +132,7 @@ walkSpeedToggleObj = MovementSection:Toggle({
         Functions.WalkSpeedToggle()
     end
 end)
+
 -- WalkSpeed Keybind
 MovementSection:Keybind({
     Title = "WalkSpeed Keybind",
@@ -128,11 +142,14 @@ MovementSection:Keybind({
     local current = walkSpeedToggleObj.getValue()
     walkSpeedToggleObj.setValue(not current)
 end)
+
+
 --------------------------------------------------------------------------------
 -- Teleportation
 --------------------------------------------------------------------------------
 local TeleportSub = Category1:Button("Teleportation", "rbxassetid://8395747586")
 local TeleportSection = TeleportSub:Section("Teleportation", "Left")
+
 TeleportSection:Textbox({
     Title = "Teleport Coordinates",
     Description = "X,Y,Z (comma or space separated)",
@@ -149,12 +166,14 @@ TeleportSection:Textbox({
         Functions.TeleportToCoordinates(Vector3.new(x,y,z))
     end
 end)
+
 -- Single-select dropdown for Teleport to Player
 local playerDict = {}
 for _,plr in ipairs(Players:GetPlayers()) do
     playerDict[plr.Name] = false
 end
 playerDict[LocalPlayer.Name] = true
+
 TeleportSection:Dropdown({
     Title = "Teleport to Player",
     Description = "Choose a player",
@@ -169,11 +188,14 @@ TeleportSection:Dropdown({
         end
     end
 end)
+
+
 --------------------------------------------------------------------------------
 -- Misc
 --------------------------------------------------------------------------------
 local MiscSub = Category1:Button("Misc", "rbxassetid://8395747586")
 local MiscSection = MiscSub:Section("Misc Features", "Left")
+
 -- Noclip Keybind
 MiscSection:Keybind({
     Title = "Noclip Keybind",
@@ -182,6 +204,7 @@ MiscSection:Keybind({
 }, function()
     Functions.NoclipToggle()
 end)
+
 -- Ragdoll / Fix Leg
 MiscSection:Button({
     Title = "Ragdoll Self",
@@ -190,6 +213,7 @@ MiscSection:Button({
 }, function()
     Functions.RagdollSelf()
 end)
+
 MiscSection:Button({
     Title = "Fix Broken Leg",
     ButtonName = "Fix",
@@ -197,6 +221,7 @@ MiscSection:Button({
 }, function()
     Functions.FixBrokenLeg()
 end)
+
 -- Placeholder
 MiscSection:Toggle({
     Title = "Placeholder Toggle",
@@ -205,6 +230,7 @@ MiscSection:Toggle({
 }, function(state)
     Functions.PlaceholderToggle(state)
 end)
+
 MiscSection:Button({
     Title = "Placeholder Button",
     ButtonName = "DO SOMETHING",
@@ -212,11 +238,14 @@ MiscSection:Button({
 }, function()
     Functions.PlaceholderButton()
 end)
+
+
 --------------------------------------------------------------------------------
 -- Combat
 --------------------------------------------------------------------------------
 local CombatSub = Category1:Button("Combat", "rbxassetid://8395747586")
 local CombatSection = CombatSub:Section("Combat Tools", "Left")
+
 local dmgVal = 10
 CombatSection:Textbox({
     Title = "Damage Amount",
@@ -225,6 +254,7 @@ CombatSection:Textbox({
 }, function(val)
     dmgVal = tonumber(val) or 10
 end)
+
 CombatSection:Button({
     Title = "Apply Damage",
     ButtonName = "DAMAGE ME",
@@ -232,12 +262,15 @@ CombatSection:Button({
 }, function()
     Functions.DamageSelf(dmgVal)
 end)
+
+
 --------------------------------------------------------------------------------
 -- Settings
 --------------------------------------------------------------------------------
 local SettingsCategory = Window:Category("Settings", "rbxassetid://8395621517")
 local SettingsSub = SettingsCategory:Button("Settings", "rbxassetid://8395747586")
 local SettingsSection = SettingsSub:Section("UI Behavior", "Left")
+
 -- Keybind to toggle Minimize
 SettingsSection:Keybind({
     Title = "Minimize UI",
@@ -246,12 +279,15 @@ SettingsSection:Keybind({
 }, function()
     Window:ToggleMinimize() -- Now works properly
 end)
+
+
 --------------------------------------------------------------------------------
 -- Credits
 --------------------------------------------------------------------------------
 local CreditsCategory = Window:Category("Credits", "rbxassetid://8395621517")
 local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
+
 CreditsSection:Button({
     Title = "UI by HydraLib, Optimizations/Additional Features by Realuid",
     ButtonName = "TY",
