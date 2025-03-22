@@ -1,72 +1,36 @@
 --// RunUI.lua
-print("Running v1.01 of the .kero UI | patch 0.006")
+print("Loading v1.00 of uihandler - Keronos | Patch 0.000")
 
 local runUI = {}
 
-local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
+local HttpService = cloneref(game:GetService("HttpService"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local Players = cloneref(game:GetService("Players"))
 local LocalPlayer = Players.LocalPlayer
 
-local IdPart = CoreGui:FindFirstChild("UI-Id")
-if IdPart then IdPart:Destroy() end
-local Identifier = Instance.new("Part")
-Identifier.Name = "UI-Id"
-Identifier.Parent = game:GetService("CoreGui")
-
-local uniqueID = HttpService:GenerateGUID(false)
-Identifier:SetAttribute("InstanceID", uniqueID)
-
-getgenv().UIIdentifier = Identifier:GetAttribute("InstanceID")
-print(getgenv().UIIdentifier)
-
--- If ApocFunctions not loaded, load it
-if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
-    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
+if getgenv().UIInitialized then
+    getgenv().UICleanDestroy()
+    getgenv().StopAll()
 end
-local Functions = getgenv().ApocFunctions
+getgenv().UIInitialized = true
+
+-- If functions not loaded then load it
+if not getgenv().Functions or not next(getgenv().Functions) then
+    print("wth1")
+    --getgenv().Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
+end
+local Functions = getgenv().Functions
 --
 if not getgenv().UILib or not next(getgenv().UILib) then
-    getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
+    print("wth2")
+    --getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
 end
 local UILib = getgenv().UILib
 
--- Create the main window
-local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Buyer")
+-- Init
+local Window = UILib.new("Apocrypha", LocalPlayer.UserId, "Farmer")
 
--- (Optional) spawn a looping check every 2 seconds
-task.spawn(function()
-    function runUI.killAll()
-        -- Stop features
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-
-        if Identifier then Identifier:Destroy() end
-        --if Window then Window:Destroy() end
-        UILib.stopScript()
-        script:Destroy()
-    end
-
-    while task.wait(2) do
-        -- If the GUI no longer has a parent (destroyed), also stop:
-        if not Identifier.Parent then
-            runUI.killAll()
-            return
-        end
-
-        -- If the attribute got changed by a new instance, also stop:
-        if Identifier:GetAttribute("InstanceID") ~= uniqueID then
-            runUI.killAll()
-            return
-        end
-    end
-end)
-
-
---------------------------------------------------------------------------------
--- “Main Features” Category
---------------------------------------------------------------------------------
+-- Main features
 local Category1 = Window:Category("Main Features", "http://www.roblox.com/asset/?id=8395621517")
 -- Movement subcategory
 local MovementSub = Category1:Button("Movement", "rbxassetid://8395747586")
@@ -250,7 +214,7 @@ local CreditsCategory = Window:Category("Credits", "rbxassetid://8395621517")
 local CreditsSub = CreditsCategory:Button("Credits", "rbxassetid://8395747586")
 local CreditsSection = CreditsSub:Section("Acknowledgments", "Left")
 CreditsSection:Button({
-    Title = "UI by Hydra, Optimizations/Additional Features by Realuid",
+    Title = "UI by Hydra, Optimizations/Additional Features/Fixes by keronos",
     ButtonName = "TY",
     Description = "Give thanks",
 }, function()
