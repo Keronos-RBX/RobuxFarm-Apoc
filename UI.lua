@@ -1,5 +1,5 @@
 --(Most) creds for this ui lib go to Hydra Ui Lib, but i added many features/optimizations myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.028")
+print("Loading v1.01 of ui lib - Keronos | Patch 0.029")
 
 local UILibrary = {}
 --// Modules
@@ -3341,7 +3341,7 @@ function UILibrary.new(gameName, userId, rank)
 
 
     closeButton.MouseButton1Click:Connect(function()
-        UIlibrary.DestroyUI
+        UIlibrary.DestroyUI()
     end)
 
     minimizeButton.MouseButton1Click:Connect(function()
