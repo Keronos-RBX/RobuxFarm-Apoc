@@ -1,7 +1,20 @@
-getgenv().ApocFunctions = getgenv().ApocFunctions or {}
+-------------------------------
+-- Functions.lua (revised)
+-------------------------------
+-- At the top: kill the old script environment if it is still running
+if getgenv().ApocFunctions 
+   and type(getgenv().ApocFunctions) == "table" 
+   and getgenv().ApocFunctions.StopAll 
+then
+    -- Tell the old instance to stop itself, without destroying *this* new script
+    getgenv().ApocFunctions.StopAll(true)
+end
+
+-- Now define a fresh global table in getgenv
+getgenv().ApocFunctions = {}
 
 local CoreGui = game:GetService("CoreGui")
-local CurrentID = CoreGui:FindFirstChild("UI-Id"):GetAttribute("InstanceID")
+local CurrentID = CoreGui:FindFirstChild("UI-Id") and CoreGui:FindFirstChild("UI-Id"):GetAttribute("InstanceID")
 if getgenv().UIIdentifier ~= CurrentID then
     print(CurrentID)
     error("Mismatching instance id's, stopping function")
@@ -375,36 +388,43 @@ function M.PlaceholderButton()
 end
 
 --------------------------------------------------------------------------------
--- STOP ALL
+-- STOP ALL + KEYBIND
 --------------------------------------------------------------------------------
+-- Keep track of keybind connections here
+local AllKeybindConns = {}
 
-function M.disableFunctions()
-    error("[Functions] Disabling functions purposefully")
+function M.RegisterKeybindConnection(conn)
+    table.insert(AllKeybindConns, conn)
 end
 
--- Make a table to hold references to keybind connections
-local AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
+-- Add this so we know which script to destroy if needed
+M.ScriptRef = script
 
--- A function to register a new keybind connection
-local RegisterKeybindConnection = function(conn)
-    table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
-end
-
--- Edit your existing StopAll() to disconnect keybinds:
-function M.StopAll()
+function M.StopAll(ignoreDestroy)
+    -- Turn off any features
     turnOffFly()
     turnOffWalkSpeed()
     turnOffNoclip()
-    -- Now disconnect all keybind connections as well:
+
+    -- Disconnect keybind connections
     for _, c in ipairs(AllKeybindConns) do
         c:Disconnect()
     end
-    -- Clear the table so reusing is possible only if script is re-run
-    getgenv().ApocFunctions.AllKeybindConns = {}
-    script:Destroy()
-    --error("[Functions] All features forcibly stopped, keybinds disconnected, script disabled.")
+    AllKeybindConns = {}
+
+    -- We can also destroy any UI references if stored here, etc.
+
+    if not ignoreDestroy then
+        -- This kills *this* script only
+        if M.ScriptRef then
+            M.ScriptRef:Destroy()
+        else
+            script:Destroy()
+        end
+    end
 end
 
+-- Finally, copy all methods in M into getgenv().ApocFunctions
 for k,v in pairs(M) do
     getgenv().ApocFunctions[k] = v
 end
