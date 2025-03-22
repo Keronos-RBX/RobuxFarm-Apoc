@@ -1,5 +1,5 @@
---(Most) creds for this ui lib go to Hydra Ui Lib, but i added some stuff myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.020")
+--(Most) creds for this ui lib go to Hydra Ui Lib, but i added quite a bit of functionality myself. - Keronos/Naix/R****id ;)
+print("Loading v1.00 of ui lib - Keronos | Patch 0.000")
 
 local UILibrary = {}
 --// Modules
@@ -2541,6 +2541,18 @@ end
 
 local objectGenerator = getObjGen()
 
+function UICleanDestroy()
+    local CoreGui = cloneref(game:GetService("CoreGui"))
+    -- Destroy UI instances
+    --[[for _, instance in ipairs(Gui) do
+        instance:Destroy()
+    end
+    Gui = {}]]
+    debrisUI = CoreGui:WaitForChild("KeronosUI")
+    debrisUI:Destroy()
+    getgenv().UIInitialized = false
+end
+getgenv().UICleanDestroy = UICleanDestroy
 
 local function initUtils()
     local utils = {}
@@ -2680,8 +2692,8 @@ local function getDragIt()
         local Events = {}
         local Holding = false
         local Hovering = false
-        local camera = workspace.Camera.ViewportSize
-        local centre = Vector2.new(camera.X / 2, camera.Y / 2)
+        local camera = workspace.CurrentCamera
+        local centre = camera.ViewportSize / 2
         local Tween
         local RenderConnection
 
@@ -2691,9 +2703,22 @@ local function getDragIt()
         local Settings = {
             HoverIcon = nil,
             DraggingIcon = nil,
-            PriorityIcon = nil, -- This Defines the Icon to which more priority should be given , "Hover" for HoverIcon "Dragging" for DraggingIcon
-            Priority = "Snapping" -- This Defines whether "Clipping" or "Snapping" should be more prioritized.
+            PriorityIcon = "Hover",
+            Priority = "Snapping"
         }
+
+        -- Improved GUI detection function
+        local function getGuiObjectsAtPosition(x, y)
+            local guis = {}
+            for _, gui in ipairs(Player.PlayerGui:GetChildren()) do
+                if gui:IsA("GuiBase2d") then
+                    for _, element in ipairs(gui:GetGuiObjectsAtPosition(x, y)) do
+                        table.insert(guis, element)
+                    end
+                end
+            end
+            return guis
+        end
 
         function GuiObject:SetData(Data)
             for i, v in pairs(Data) do
@@ -2706,9 +2731,7 @@ local function getDragIt()
             if Index then
                 if Events[self] then
                     for _, v in ipairs(Events[self]) do
-                        if v then
-                            v:Destroy()
-                        end
+                        v:Disconnect()
                     end
                     Events[self] = nil
                 end
@@ -2725,54 +2748,31 @@ local function getDragIt()
             end
         end
 
-        function GuiObject:GetDistanceFromUI(UI)
-            local aPos = UI.AbsolutePosition - centre
-            local bPos = self.Object.AbsolutePosition - centre
-            local bPos = aPos - bPos
-
-            local Dot = math.deg(math.atan2(bPos.X, bPos.Y))
-
-            local Side = Utils.Side(Dot)
-            if Side == "Up" then
-            elseif Side == "Down" then
-            elseif Side == "Left" then
-            elseif Side == "Right" then
-            end
-        end
-
-        coroutine.wrap(
-            function()
-                while Settings.HoverIcon do
-                    RS.RenderStepped:Wait()
-                    if Settings.PriorityIcon == "Hover" or not Holding then
-                        local CanSet = true
-                        for _, v in ipairs(Objects) do
-                            if v.CanDrag then
-                                CanSet = false
-                                break
-                            end
+        -- Hover handling coroutine
+        coroutine.wrap(function()
+            while true do
+                RS.RenderStepped:Wait()
+                if Settings.HoverIcon and (Settings.PriorityIcon == "Hover" or not Holding) then
+                    local CanSet = true
+                    for _, v in ipairs(Objects) do
+                        if v.CanDrag then
+                            CanSet = false
+                            break
                         end
+                    end
 
-                        if CanSet then
-                            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
-                            local Guis = Player.PlayerGui:GetGuiObjectsAtPosition(MousePos.X, MousePos.Y)
-                            if #Guis >= 1 then
-                                Hovering = true
-                                if Settings.HoverIcon then
-                                    Mouse.Icon = Settings.HoverIcon
-                                end
-                            else
-                                Hovering = false
-                                Mouse.Icon = ""
-                            end
-                        end
+                    if CanSet then
+                        local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+                        local Guis = getGuiObjectsAtPosition(MousePos.X, MousePos.Y)
+                        Hovering = #Guis > 0
+                        Mouse.Icon = Hovering and Settings.HoverIcon or ""
                     end
                 end
             end
-        )()
+        end)()
 
         drag.Drag = function(Gui, setTo, Boundary, Clippings, AutoClip, ResponseTime, Snappings)
-            local self = {}
+            local self = setmetatable({}, GuiObject)
             self.Boundary = Boundary
             self.Object = Gui
             self.Clippings = Clippings
@@ -2780,228 +2780,109 @@ local function getDragIt()
             self.OldPosition = nil
             self.Clipped = nil
             self.AutoClip = AutoClip
-            self.ResponseTime = (ResponseTime and math.abs(ResponseTime))
+            self.ResponseTime = ResponseTime and math.abs(ResponseTime)
             self.Snappings = Snappings
             self.Snapped = nil
 
-            self._InputCheck =
-                setTo.InputBegan:Connect(
-                function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        local CanSet = false
-                        for _, v in ipairs(Objects) do
-                            if v.CanDrag then
-                                CanSet = true
-                                break
+            self._InputCheck = setTo.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local isOverlapping = Gui.AbsolutePosition.X <= Mouse.X and Mouse.X <= Gui.AbsolutePosition.X + Gui.AbsoluteSize.X and
+                        Gui.AbsolutePosition.Y <= Mouse.Y and Mouse.Y <= Gui.AbsolutePosition.Y + Gui.AbsoluteSize.Y
+
+                    if isOverlapping then
+                        self.CanDrag = true
+                        Events[self][1]:Fire()
+
+                        local Connection
+                        Connection = Input.Changed:Connect(function()
+                            if Input.UserInputState == Enum.UserInputState.End then
+                                self.CanDrag = false
+                                Events[self][2]:Fire()
+                                Connection:Disconnect()
                             end
-                        end
-
-                        local Event = Events[self]
-
-                        if not CanSet then
-                            self.CanDrag = true
-                            Event[1]:Fire()
-
-                            local Connection
-                            Connection =
-                                Input.Changed:Connect(
-                                function()
-                                    if Input.UserInputState == Enum.UserInputState.End then
-                                        self.CanDrag = false
-                                        Event[2]:Fire()
-                                        Connection:Disconnect()
-                                    end
-                                end
-                            )
-                        end
+                        end)
                     end
                 end
-            )
+            end)
 
             local DragStart = Instance.new("BindableEvent")
             local DragEnd = Instance.new("BindableEvent")
-
-            self.DragStart = DragStart.Event
-            self.DragEnd = DragEnd.Event
-
             Events[self] = {DragStart, DragEnd}
 
-            setmetatable(self, GuiObject)
-
             table.insert(Objects, self)
-
             return self
         end
 
-        drag.InputBegan =
-            UIS.InputBegan:Connect(
-            function(Input, gp)
-                if gp then
-                    return
-                end
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    for _, v in ipairs(Objects) do
-                        if v.CanDrag then
-                            v.OldPosition = Vector2.new(Mouse.X, Mouse.Y)
-                        end
-                    end
-                    RenderConnection =
-                        RS.RenderStepped:Connect(
-                        function(DT)
-                            local MousePos = Vector2.new(Mouse.X, Mouse.Y)
-                            local Possible = 0
-                            for _, v in ipairs(Objects) do
-                                if v.CanDrag then
-                                    Possible = Possible + 1
-                                    local Position = v.Object.Position
-                                    local Change = MousePos - v.OldPosition
+        drag.InputBegan = UIS.InputBegan:Connect(function(Input, gp)
+            if gp or Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 
-                                    local ScaleX, ScaleY = Utils.ScaleToOffset({Position.X.Scale, Position.Y.Scale})
-                                    local NewPos =
-                                        UDim2.new(
-                                        0,
-                                        Position.X.Offset + Change.X + ScaleX,
-                                        0,
-                                        Position.Y.Offset + Change.Y + ScaleY
-                                    )
-
-                                    if v.Boundary then
-                                        local X, Y = Utils.CheckBoundary(v.Boundary, v.Object, Change)
-                                        NewPos = UDim2.new(0, X, 0, Y)
-                                    end
-                                    local Alpha
-                                    if v.ResponseTime then
-                                        Alpha = DT * 7 * v.ResponseTime
-                                    else
-                                        Alpha = 1
-                                    end
-                                    v._Target = NewPos
-                                    v.Object.Position = v.Object.Position:Lerp(NewPos, Alpha)
-                                    v.OldPosition = v.OldPosition:Lerp(MousePos, Alpha)
-
-                                    local Guis = Player.PlayerGui:GetGuiObjectsAtPosition(MousePos.X, MousePos.Y)
-                                    local Sorted = Utils.SortTable(v.Clippings, Guis, v.Object)
-                                    if Sorted then
-                                        v.Clipped = Sorted
-                                    else
-                                        if not v.AutoClip then
-                                            v.Clipped = nil
-                                        end
-                                    end
-                                    if v.Snappings then
-                                        local Closest
-                                        local ChosenSnap
-                                        for _, snap in ipairs(v.Snappings) do
-                                            if not Closest then
-                                                Closest =
-                                                    (v.Object.AbsolutePosition - snap.AbsolutePosition).Magnitude
-                                                ChosenSnap = snap
-                                            else
-                                                local CurrentMag =
-                                                    (v.Object.AbsolutePosition - snap.AbsolutePosition).Magnitude
-                                                if CurrentMag < Closest then
-                                                    Closest = CurrentMag
-                                                    ChosenSnap = snap
-                                                end
-                                            end
-                                        end
-                                        if Closest then
-                                            local X, Y =
-                                                Utils.ScaleToOffset(
-                                                {ChosenSnap.Size.X.Scale, ChosenSnap.Size.Y.Scale}
-                                            )
-                                            X = X + ChosenSnap.Size.X.Offset
-                                            Y = Y + ChosenSnap.Size.X.Offset
-
-                                            local Right =
-                                                (v.Object.AbsolutePosition -
-                                                (ChosenSnap.AbsolutePosition + Vector2.new(X))).Magnitude *
-                                                0.0264583333
-                                            local Left =
-                                                (v.Object.AbsolutePosition -
-                                                (ChosenSnap.AbsolutePosition - Vector2.new(X))).Magnitude *
-                                                0.0264583333
-                                            local Top =
-                                                (v.Object.AbsolutePosition -
-                                                (ChosenSnap.AbsolutePosition + Vector2.new(0, Y))).Magnitude *
-                                                0.0264583333
-                                            local Bottom =
-                                                (v.Object.AbsolutePosition -
-                                                (ChosenSnap.AbsolutePosition - Vector2.new(0, Y))).Magnitude *
-                                                0.0264583333
-
-                                            if
-                                                (Closest * 0.0264583333) <= 3.5 or Top <= 2.5 or Right <= 2.5 or
-                                                    Left <= 2.5 and Bottom <= 2.5
-                                                then -- Converting the Pixels to CM for easy comparing
-                                                v.Snap = ChosenSnap
-                                            else
-                                                v.Snap = nil
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                            if
-                                Possible ~= 0 and (Settings.PriorityIcon == "Dragging" or not Hovering) and
-                                    Settings.DraggingIcon
-                                then
-                                Mouse.Icon = Settings.DraggingIcon
-                            end
-                        end
-                    )
+            for _, v in ipairs(Objects) do
+                if v.CanDrag then
+                    v.OldPosition = Vector2.new(Mouse.X, Mouse.Y)
                 end
             end
-        )
 
-        drag.InputEnd =
-            UIS.InputEnded:Connect(
-            function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if RenderConnection then
-                        RenderConnection:Disconnect()
-                        RenderConnection = nil
-                        Mouse.Icon = ""
-                        for _, v in ipairs(Objects) do
-                            coroutine.wrap(
-                                function()
-                                    if v.Clipped and (not v.Snap or Settings.Priority == "Clipping") then
-                                        if v.ResponseTime then
-                                            if v.ResponseTime > 0 then
-                                                for i = 1, 10 do
-                                                    RS.RenderStepped:Wait()
-                                                    v.Object.Position =
-                                                        v.Object.Position:Lerp(v.Clipped.Position, i / 10)
-                                                end
-                                            end
-                                        else
-                                            v.Object.Position = v.Clipped.Position
-                                        end
-                                        v.Object.Rotation = v.Clipped.Rotation
-                                    end
-                                    if v.Snap and (not v.Clipped or Settings.Priority == "Snapping") then
-                                        local Target = Utils.Snap(v.Snap, v.Object, v._Target)
-                                        if v.ResponseTime then
-                                            for i = 1, 10 do
-                                                RS.RenderStepped:Wait()
+            RenderConnection = RS.RenderStepped:Connect(function(DT)
+                local MousePos = Vector2.new(Mouse.X, Mouse.Y)
+                local draggingObjects = {}
 
-                                                v.Object.Position = v.Object.Position:Lerp(Target, i / 10)
-                                            end
-                                        else
-                                            v.Object.Position = Target
-                                        end
-                                        v.Snap = nil
-                                    end
-                                end
-                            )()
-                            if v.CanDrag then
-                                v.OldPosition = nil
+                for _, v in ipairs(Objects) do
+                    if v.CanDrag then
+                        table.insert(draggingObjects, v)
+                        local Position = v.Object.Position
+                        local Change = MousePos - v.OldPosition
+
+                        local NewPos = UDim2.new(
+                            Position.X.Scale,
+                            Position.X.Offset + Change.X,
+                            Position.Y.Scale,
+                            Position.Y.Offset + Change.Y
+                        )
+
+                        if v.Boundary then
+                            NewPos = Utils.CheckBoundary(v.Boundary, NewPos)
+                        end
+
+                        if v.ResponseTime then
+                            local Alpha = math.min(DT * 60 * v.ResponseTime, 1)
+                            v.Object.Position = v.Object.Position:Lerp(NewPos, Alpha)
+                        else
+                            v.Object.Position = NewPos
+                        end
+
+                        v.OldPosition = MousePos:Lerp(v.OldPosition, 0.5)
+                    end
+                end
+
+                if #draggingObjects > 0 and Settings.DraggingIcon then
+                    Mouse.Icon = Settings.DraggingIcon
+                end
+            end)
+        end)
+
+        drag.InputEnd = UIS.InputEnded:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 and RenderConnection then
+                RenderConnection:Disconnect()
+                RenderConnection = nil
+                Mouse.Icon = ""
+
+                for _, v in ipairs(Objects) do
+                    if v.CanDrag then
+                        v.CanDrag = false
+                        v.OldPosition = nil
+
+                        if v.Snap then
+                            local targetPos = Utils.Snap(v.Snap, v.Object)
+                            if v.ResponseTime then
+                                TWS:Create(v.Object, TweenInfo.new(v.ResponseTime), {Position = targetPos}):Play()
+                            else
+                                v.Object.Position = targetPos
                             end
                         end
                     end
                 end
             end
-        )
+        end)
 
         return drag
     end
@@ -3013,7 +2894,7 @@ local function getEffect()
 
     local module = {}
 
-    local TweenService = game:GetService("TweenService")
+    local TweenService = cloneref(game:GetService("TweenService"))
     local TI = TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
     module.ButtonHoverEffect = function(ui, req)
@@ -3199,7 +3080,7 @@ local CircleClick = function(Button)
     
     game.Debris:AddItem(circle,.4)
     
-    local tween = game:GetService("TweenService"):Create(circle, TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), finalGoal);
+    local tween = cloneref(game:GetService("TweenService")):Create(circle, TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), finalGoal);
     tween:Play();
 end
 
@@ -3217,12 +3098,12 @@ local function getLayoutOrder(UI)
 end
 
 --// Services
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
+local RunService = cloneref(game:GetService("RunService"))
+local HttpService = cloneref(game:GetService("HttpService"))
+local Players = cloneref(game:GetService("Players"))
 local LocalPlayer = Players.LocalPlayer
 
-local TweenService = game:GetService("TweenService")
+local TweenService = cloneref(game:GetService("TweenService"))
 local TI = TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
 -->> setup UILib table
@@ -3240,8 +3121,8 @@ end
 
 function UILibrary.new(gameName, userId, rank)
     local GUI = Instance.new("ScreenGui")
-    GUI.Name = "HydraUILib"
-    GUI.Parent = game:GetService("CoreGui")
+    GUI.Name = "KeronosUI"
+    GUI.Parent = cloneref(game:GetService("CoreGui"))
 
     local mainFrame = objectGenerator.new("MainContainer")
     mainFrame.Parent = GUI
@@ -3326,11 +3207,8 @@ function UILibrary.new(gameName, userId, rank)
     end
     -- e.g. close button
     closeButton.MouseButton1Click:Connect(function()
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-        GUI:Destroy()
-        error("UI closed and script forcibly ended.")
+        getgenv().UICleanDestroy()
+        getgenv().StopAll()
     end)
 
     minimizeButton.MouseButton1Click:Connect(function()
@@ -4536,7 +4414,7 @@ function UILibrary.Section:Keybind(sett, callback)
         currentKBInfo = {}
 
         keyPressConn =
-            game:GetService("UserInputService").InputBegan:Connect(
+            cloneref(game:GetService("UserInputService")).InputBegan:Connect(
             function(input, gp)
                 if gp then
                     return
@@ -4549,9 +4427,6 @@ function UILibrary.Section:Keybind(sett, callback)
                 end
             end
             )
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.RegisterKeybindConnection then
-            getgenv().ApocFunctions.RegisterKeybindConnection(keyPressConn)
-        end
     end
 
     functions.getValue = function()
@@ -4581,7 +4456,7 @@ function UILibrary.Section:Keybind(sett, callback)
             local old = functions.getValue()
 
             conn =
-                game:GetService("UserInputService").InputBegan:Connect(
+                cloneref(game:GetService("UserInputService")).InputBegan:Connect(
                 function(input, gp)
                     --if gp then return end
 
@@ -4833,8 +4708,8 @@ function UILibrary.Section:ColorPicker(sett, callback)
             RunService.RenderStepped:Connect(
                 function()
                     local mousePos =
-                        game:GetService("UserInputService"):GetMouseLocation() -
-                        Vector2.new(0, game:GetService("GuiService"):GetGuiInset().Y)
+                        cloneref(game:GetService("UserInputService")):GetMouseLocation() -
+                        Vector2.new(0, cloneref(game:GetService("GuiService")):GetGuiInset().Y)
 
                     local centreOfWheel =
                         Vector2.new(
@@ -5589,4 +5464,5 @@ function UILibrary.Section:Dropdown(sett, callback)
     return meta
 end
 
+getgenv().UILib = UILibrary
 return UILibrary
