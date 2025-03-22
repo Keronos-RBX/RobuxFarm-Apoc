@@ -1,5 +1,4 @@
---(Most) creds for this ui lib go to Hydra Ui Lib, but i added many features/optimizations myself (keronos/naix)
-print("Loading v1.01 of ui lib - Keronos | Patch 0.029")
+--All creds for this ui lib go to Hydra UI Lib.
 
 local UILibrary = {}
 --// Modules
@@ -127,7 +126,7 @@ local function getObjGen()
                 UIListLayout_8 = Instance.new("UIListLayout"),
                 UIListLayout_9 = Instance.new("UIListLayout"),
                 UIPadding_5 = Instance.new("UIPadding"),
-                MainContainer = Instance.new("Frame"),
+                Window = Instance.new("Frame"),
                 Watermark = Instance.new("TextLabel"),
                 UIPadding_6 = Instance.new("UIPadding"),
                 MainUI = Instance.new("Frame"),
@@ -1200,14 +1199,14 @@ local function getObjGen()
             Gui.UIPadding_5.PaddingLeft = UDim.new(0, 4)
             Gui.UIPadding_5.PaddingRight = UDim.new(0, 4)
 
-            Gui.MainContainer.Name = "MainContainer"
-            Gui.MainContainer.Parent = Gui.Objects
-            Gui.MainContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Gui.MainContainer.BackgroundTransparency = 1.000
-            Gui.MainContainer.Size = UDim2.new(1, 0, 1, 0)
+            Gui.Window.Name = "Window"
+            Gui.Window.Parent = Gui.Objects
+            Gui.Window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Gui.Window.BackgroundTransparency = 1.000
+            Gui.Window.Size = UDim2.new(1, 0, 1, 0)
 
             Gui.Watermark.Name = "Watermark"
-            Gui.Watermark.Parent = Gui.MainContainer
+            Gui.Watermark.Parent = Gui.Window
             Gui.Watermark.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Watermark.BackgroundTransparency = 1.000
             Gui.Watermark.Size = UDim2.new(0.5, 0, 0.0199999996, 0)
@@ -1219,14 +1218,14 @@ local function getObjGen()
             Gui.Watermark.TextXAlignment = Enum.TextXAlignment.Left
             Gui.Watermark.Position = UDim2.new(0, 0, 0, 0)
 
-            Gui.UIPadding_6.Parent = Gui.MainContainer
+            Gui.UIPadding_6.Parent = Gui.Window
             Gui.UIPadding_6.PaddingBottom = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingLeft = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingRight = UDim.new(0, 8)
             Gui.UIPadding_6.PaddingTop = UDim.new(0, 8)
 
             Gui.MainUI.Name = "MainUI"
-            Gui.MainUI.Parent = Gui.MainContainer
+            Gui.MainUI.Parent = Gui.Window
             Gui.MainUI.AnchorPoint = Vector2.new(0.5, 0.5)
             Gui.MainUI.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
             Gui.MainUI.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1290,7 +1289,7 @@ local function getObjGen()
             Gui.Rank.Size = UDim2.new(1, 0, 0.5, 0)
             Gui.Rank.ZIndex = 123
             Gui.Rank.Font = Enum.Font.Gotham
-            Gui.Rank.Text = "Buyer"
+            Gui.Rank.Text = "Admin"
             Gui.Rank.TextColor3 = Color3.fromRGB(94, 94, 94)
             Gui.Rank.TextSize = 14.000
             Gui.Rank.TextXAlignment = Enum.TextXAlignment.Left
@@ -1312,7 +1311,7 @@ local function getObjGen()
             Gui.Title_2.Size = UDim2.new(1, 0, 0.5, 0)
             Gui.Title_2.ZIndex = 123
             Gui.Title_2.Font = Enum.Font.GothamSemibold
-            Gui.Title_2.Text = "Keronos-UI"
+            Gui.Title_2.Text = "susss!!!"
             Gui.Title_2.TextColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Title_2.TextSize = 14.000
             Gui.Title_2.TextXAlignment = Enum.TextXAlignment.Left
@@ -1943,7 +1942,7 @@ local function getObjGen()
             Gui.UICorner_18.Parent = Gui.Shadow_3
 
             Gui.Notifications.Name = "Notifications"
-            Gui.Notifications.Parent = Gui.MainContainer
+            Gui.Notifications.Parent = Gui.Window
             Gui.Notifications.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Gui.Notifications.BackgroundTransparency = 1.000
             Gui.Notifications.Position = UDim2.new(0.850000024, 0, 0, 0)
@@ -3227,7 +3226,7 @@ local TI = TweenInfo.new(.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.
 
 -->> setup UILib table
 local UILibNames = {
-    "MainContainer",
+    "Window",
     "Category",
     "Button",
     "Section"
@@ -3239,13 +3238,34 @@ for i, v in pairs(UILibNames) do
 end
 
 function UILibrary.new(gameName, userId, rank)
+    -- Create a named ScreenGui so we can find it easily
     local GUI = Instance.new("ScreenGui")
     GUI.Name = "HydraUILib"
-    GUI.Parent = game:GetService("CoreGui")
+    GUI.Parent = game:GetService("CoreGui")  -- or PlayerGui
+    GUI.ResetOnSpawn = false
+    GUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-    local mainFrame = objectGenerator.new("MainContainer")
-    mainFrame.Parent = GUI
+    -- Build the main window object
+    local window = objectGenerator.new("Window")
+    window.Parent = GUI
 
+    -- Make it draggable by the logo or whichever portion
+    local dragFrame = Instance.new("Frame")
+    dragFrame.BackgroundTransparency = 1
+    dragFrame.Size = UDim2.fromScale(2, 2)
+    dragFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    dragFrame.Position = UDim2.fromScale(0.5, 0.5)
+    dragFrame.Parent = window.MainUI.Sidebar.ContentHolder.Cheats.Logo
+
+    local DraggableAPI = Draggable.Drag(window.MainUI, dragFrame)
+
+    -- Basic watermark or user info
+    window.Watermark.Text = ("RobuxFarm.Kero | %s | %s"):format(userId, gameName)
+    local userinfo = window.MainUI.Sidebar.ContentHolder.UserInfo.Content
+    userinfo.Rank.Text = rank
+    userinfo.Title.Text = tostring(userId)
+
+    -- Add the close & minimize
     local closeButton = Instance.new("ImageButton")
     closeButton.Name = "CloseButton"
     closeButton.Image = "rbxassetid://7072725342"
@@ -3254,7 +3274,7 @@ function UILibrary.new(gameName, userId, rank)
     closeButton.Position = UDim2.new(1, -25, 0, 5)
     closeButton.ZIndex = 300
     closeButton.BackgroundTransparency = 1
-    closeButton.Parent = mainFrame.MainUI
+    closeButton.Parent = window.MainUI
 
     local minimizeButton = Instance.new("ImageButton")
     minimizeButton.Name = "MinimizeButton"
@@ -3264,109 +3284,90 @@ function UILibrary.new(gameName, userId, rank)
     minimizeButton.Position = UDim2.new(1, -50, 0, 5)
     minimizeButton.ZIndex = 300
     minimizeButton.BackgroundTransparency = 1
-    minimizeButton.Parent = mainFrame.MainUI
+    minimizeButton.Parent = window.MainUI
 
     local minimized = false
-    local Logo = mainFrame.MainUI.Sidebar.ContentHolder.Cheats.Logo
-    local originalPos = mainFrame.Position
-    local originalSize = mainFrame.Size
-    local originalClosePos = closeButton.Position
-    local originalMinimizePos = minimizeButton.Position
-    local originalLogoPos = Logo.Position
+    local originalPos = window.MainUI.Position
+    local originalSize = window.MainUI.Size
 
-    local function doMinimize()
+    minimizeButton.MouseButton1Click:Connect(function()
         minimized = not minimized
-
-        -- The factor by which non-excluded UI elements will be shrunk
-        local scaleFactor = 0.1
-
         if minimized then
-            -- Keep mainFrame’s position but shrink its size a bit
-            mainFrame.Size = UDim2.new(
-                mainFrame.Size.X.Scale * scaleFactor, 
-                mainFrame.Size.X.Offset * scaleFactor, 
-                mainFrame.Size.Y.Scale * scaleFactor, 
-                mainFrame.Size.Y.Offset * scaleFactor
-            )
+            -- Move to top-left
+            window.MainUI.Position = UDim2.fromOffset(0, 0)
+            -- A smaller size that basically shows only the sidebar’s width & a short height
+            window.MainUI.Size = UDim2.new(0, 220, 0, 60)
 
-            -- Scale down all GuiObjects except the mainFrame, closeButton, minimizeButton, and Logo
-            for _, obj in ipairs(mainFrame:GetDescendants()) do
-                if obj:IsA("GuiObject")
-                and obj ~= mainFrame
-                and obj ~= closeButton
-                and obj ~= minimizeButton
-                and obj ~= Logo
-                then
-                    -- Store the original size so we can restore it later
-                    if not obj:GetAttribute("OriginalSize") then
-                        obj:SetAttribute("OriginalSize", obj.Size)
-                    end
-
-                    local originalSize = obj:GetAttribute("OriginalSize")
-                    if originalSize then
-                        local newXScale = originalSize.X.Scale * scaleFactor
-                        local newXOffset = originalSize.X.Offset * scaleFactor
-                        local newYScale = originalSize.Y.Scale * scaleFactor
-                        local newYOffset = originalSize.Y.Offset * scaleFactor
-                        obj.Size = UDim2.new(newXScale, newXOffset, newYScale, newYOffset)
+            -- Hide the main content except the logo or whatever you want
+            -- The easiest is to hide the entire "Content" frame and user info
+            if window.MainUI.Content then
+                window.MainUI.Content.Visible = false
+            end
+            if window.MainUI.Sidebar.ContentHolder.UserInfo then
+                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = false
+            end
+            if window.MainUI.Sidebar.ContentHolder.Cheats then
+                -- We want to show only the logo, so let's hide sub-objects except the logo
+                -- But "Logo" is a child of "Cheats", so let's do:
+                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+                    if child.Name ~= "Logo" then
+                        child.Visible = false
                     end
                 end
             end
         else
-            -- Restore mainFrame size
-            mainFrame.Size = originalSize
+            -- restore
+            window.MainUI.Position = originalPos
+            window.MainUI.Size = originalSize
 
-            -- Restore each child’s original size
-            for _, obj in ipairs(mainFrame:GetDescendants()) do
-                if obj:IsA("GuiObject") and obj:GetAttribute("OriginalSize") then
-                    obj.Size = obj:GetAttribute("OriginalSize")
+            if window.MainUI.Content then
+                window.MainUI.Content.Visible = true
+            end
+            if window.MainUI.Sidebar.ContentHolder.UserInfo then
+                window.MainUI.Sidebar.ContentHolder.UserInfo.Visible = true
+            end
+            if window.MainUI.Sidebar.ContentHolder.Cheats then
+                for _, child in pairs(window.MainUI.Sidebar.ContentHolder.Cheats:GetChildren()) do
+                    child.Visible = true
                 end
             end
         end
-    end
-    
-    -- Somewhere near the bottom of UI.lua (UIsecond.lua) where you define UILibrary
-    function UILibrary.DestroyUI(ignoreDestroy)
-        -- Suppose your main GUI is stored in 'MainUI' or 'GUI'
-        -- e.g. a ScreenGui or Frame that is the root
-        if UILibrary.MainUI and UILibrary.MainUI.Parent then
-            UILibrary.MainUI:Destroy()
-        end
-    
-        -- If you want to optionally kill the script environment:
-        if not ignoreDestroy then
-            script:Destroy()
-        end
-    end
+    end)
 
-
+    -- When close is pressed, destroy everything and wipe ApocFunctions
     closeButton.MouseButton1Click:Connect(function()
-        UIlibrary.DestroyUI()
+        -- Wipe out ApocFunctions
+        if getgenv().ApocFunctions then
+            for k in pairs(getgenv().ApocFunctions) do
+                getgenv().ApocFunctions[k] = nil
+            end
+        end
+        -- Destroy the entire UI (this effectively kills all connected events in the UI library)
+        GUI:Destroy()
+        warn("[UI] All scripts & UI terminated by Close button.")
     end)
-
-    minimizeButton.MouseButton1Click:Connect(function()
-        doMinimize(not minimized)
-    end)
-
-    -- Return a table so "Window" is the metatable
-    return setmetatable({
-        MainUI = mainFrame,
-        minimized = minimized,
-        doMinimize = doMinimize,
-        -- you can store gameName/userId/rank here too
-        gameName = gameName,
-        userId = userId,
-        rank = rank,
-        UI = {},
-    }, UILibrary.MainContainer)
+    return setmetatable(
+        {
+            UI = {},
+            windowInfo = {
+                gameName = gameName,
+                userId = userId,
+                rank = rank
+            },
+            currentSelection = nil,
+            currentCategorySelection = nil,
+            currentTab = nil,
+            MainUI = window
+        },
+        UILibrary.Window
+    )
 end
 
-
-function UILibrary.MainContainer:setAnimSpeed(val)
+function UILibrary.Window:setAnimSpeed(val)
     TI = TweenInfo.new(.4 / (val / 100), Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 end
 
-function UILibrary.MainContainer:Notification(sett)
+function UILibrary.Window:Notification(sett)
     local Notif = objectGenerator.new("Notification").Main
 
     Notif.Size = UDim2.new(1, 0, 1, -5)
@@ -3532,7 +3533,7 @@ function UILibrary.MainContainer:Notification(sett)
     )
 end
 
-function UILibrary.MainContainer:Prompt(sett)
+function UILibrary.Window:Prompt(sett)
     local Notif = objectGenerator.new("Prompt").Main
 
     Notif.Size = UDim2.new(1, 0, 1, -5)
@@ -3762,7 +3763,7 @@ function UILibrary.MainContainer:Prompt(sett)
     return selection
 end
 
-function UILibrary.MainContainer:ChangeCategory(new)
+function UILibrary.Window:ChangeCategory(new)
     local catFolder = self.MainUI.MainUI.Sidebar.ContentHolder.Cheats.CheatHolder
     local Object = catFolder:FindFirstChild(new)
 
@@ -3850,7 +3851,7 @@ function UILibrary.MainContainer:ChangeCategory(new)
     end
 end
 
-function UILibrary.MainContainer:ChangeCategorySelection(name)
+function UILibrary.Window:ChangeCategorySelection(name)
     local catFolder = self.MainUI.MainUI.Sidebar.Sidebar2[self.currentSelection.Name].Bar2Holder
     local Object = catFolder:FindFirstChild(name)
 
@@ -3946,7 +3947,7 @@ function UILibrary.MainContainer:ChangeCategorySelection(name)
     end
 end
 
-function UILibrary.MainContainer:Category(name, icon)
+function UILibrary.Window:Category(name, icon)
     local catFolder = self.MainUI.MainUI.Sidebar.ContentHolder.Cheats.CheatHolder
     local category = objectGenerator.new("Category")
 
@@ -4559,10 +4560,7 @@ function UILibrary.Section:Keybind(sett, callback)
                     callback()
                 end
             end
-            )
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.RegisterKeybindConnection then
-            getgenv().ApocFunctions.RegisterKeybindConnection(keyPressConn)
-        end
+        )
     end
 
     functions.getValue = function()
@@ -5238,10 +5236,6 @@ function UILibrary.Section:Slider(sett, callback)
         ][sett.Title] = meta
 
     return meta
-end
-
-function UILibrary.MainContainer:ToggleMinimize()
-    self.doMinimize()
 end
 
 function UILibrary.Section:Dropdown(sett, callback)
