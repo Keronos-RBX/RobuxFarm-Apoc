@@ -1,5 +1,13 @@
---// Functions.lua
 getgenv().ApocFunctions = getgenv().ApocFunctions or {}
+
+local CoreGui = game:GetService("CoreGui")
+local CurrentID = CoreGui:FindFirstChild("UI-Id"):GetAttribute("InstanceID")
+if getgenv().UIIdentifier ~= CurrentID then
+    print(CurrentID)
+    error("Mismatching instance id's, stopping function")
+end
+
+print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.006")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -26,7 +34,7 @@ local walkSpeedEnabled = false
 local desiredWalkSpeed = 16  -- For toggling WalkSpeed
 local defaultWalkSpeed = 16  -- Usually Roblox default
 
--- Connections for fly
+local Noclipping
 local flyKeyDown, flyKeyUp
 
 --------------------------------------------------------------------------------
@@ -59,7 +67,6 @@ end
 -- Fly routines
 --------------------------------------------------------------------------------
 local function sFLY(vfly)
-    -- Wait until character & root exist
     while not (LocalPlayer
         and LocalPlayer.Character
         and getRoot(LocalPlayer.Character)
@@ -80,7 +87,6 @@ local function sFLY(vfly)
     local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
     local SPEED = 0
 
-    -- Create BodyGyro/BodyVelocity
     local BG = Instance.new("BodyGyro")
     local BV = Instance.new("BodyVelocity")
     BG.P = 9e4
@@ -99,10 +105,7 @@ local function sFLY(vfly)
 
     task.spawn(function()
         while FLYING and task.wait() do
-            if (CONTROL.F + CONTROL.B) ~= 0
-               or (CONTROL.L + CONTROL.R) ~= 0
-               or (CONTROL.Q + CONTROL.E) ~= 0
-            then
+            if (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
                 SPEED = 50
             else
                 SPEED = 0
@@ -178,15 +181,47 @@ local function NOFLY()
 end
 
 --------------------------------------------------------------------------------
+-- Turn Off Routines
+--------------------------------------------------------------------------------
+local function turnOffFly()
+    NOFLY()
+end
+
+local function turnOffWalkSpeed()
+    walkSpeedEnabled = false
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = defaultWalkSpeed
+        end
+    end
+end
+
+local function turnOffNoclip()
+    if Noclipping then
+        Noclipping:Disconnect()
+        Noclipping = nil
+    end
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Exposed Table
 --------------------------------------------------------------------------------
 local M = {}
 
 --------------------------------------------------------------------------------
--- WALKSPEED TOGGLE & SET
+-- WALKSPEED
 --------------------------------------------------------------------------------
 function M.WalkSpeedToggle(inputSpeed)
-    -- If already on, turn off
     if walkSpeedEnabled then
         disableWalkSpeed()
     else
@@ -195,11 +230,11 @@ function M.WalkSpeedToggle(inputSpeed)
 end
 
 function M.SetWalkSpeed(speed)
-    enableWalkSpeed(speed or 16)  -- forcibly sets it, leaving the toggle ON
+    enableWalkSpeed(speed or 16)
 end
 
 --------------------------------------------------------------------------------
--- SET FLY SPEED
+-- FLY
 --------------------------------------------------------------------------------
 function M.SetFlySpeed(newSpeed)
     local num = tonumber(newSpeed) or 1
@@ -207,9 +242,6 @@ function M.SetFlySpeed(newSpeed)
     print("[Functions] Fly speed set to:", num)
 end
 
---------------------------------------------------------------------------------
--- FlyToggle
---------------------------------------------------------------------------------
 function M.FlyToggle()
     if FLYING then
         NOFLY()
@@ -221,14 +253,12 @@ function M.FlyToggle()
 end
 
 --------------------------------------------------------------------------------
--- NOCLIP TOGGLE
+-- NOCLIP
 --------------------------------------------------------------------------------
 local Clip = true
-local Noclipping
-
 local function StartNoclip()
     Clip = false
-    local function NoclipLoop()
+    Noclipping = RunService.Stepped:Connect(function()
         local character = LocalPlayer.Character
         if not Clip and character then
             for _, child in pairs(character:GetDescendants()) do
@@ -237,8 +267,7 @@ local function StartNoclip()
                 end
             end
         end
-    end
-    Noclipping = RunService.Stepped:Connect(NoclipLoop)
+    end)
     print("[Functions] Noclip Enabled.")
 end
 
@@ -268,7 +297,7 @@ function M.NoclipToggle()
 end
 
 --------------------------------------------------------------------------------
--- TELEPORT TO COORDINATES
+-- TELEPORTS
 --------------------------------------------------------------------------------
 function M.TeleportToCoordinates(vec3)
     local char = LocalPlayer.Character
@@ -280,9 +309,6 @@ function M.TeleportToCoordinates(vec3)
     end
 end
 
---------------------------------------------------------------------------------
--- TELEPORT TO PLAYER
---------------------------------------------------------------------------------
 function M.TeleportToPlayer(playerName)
     local targetPlr = Players:FindFirstChild(playerName)
     if targetPlr
@@ -301,7 +327,7 @@ function M.TeleportToPlayer(playerName)
 end
 
 --------------------------------------------------------------------------------
--- FIX BROKEN LEG (Example)
+-- MISC EXAMPLES
 --------------------------------------------------------------------------------
 function M.FixBrokenLeg()
     local char = LocalPlayer.Character
@@ -314,9 +340,6 @@ function M.FixBrokenLeg()
     end
 end
 
---------------------------------------------------------------------------------
--- RAGDOLL YOURSELF
---------------------------------------------------------------------------------
 function M.RagdollSelf()
     local char = LocalPlayer.Character
     if char then
@@ -328,9 +351,6 @@ function M.RagdollSelf()
     end
 end
 
---------------------------------------------------------------------------------
--- DAMAGE YOURSELF
---------------------------------------------------------------------------------
 function M.DamageSelf(amount)
     local char = LocalPlayer.Character
     if char then
@@ -342,29 +362,56 @@ function M.DamageSelf(amount)
     end
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER KEYBIND
---------------------------------------------------------------------------------
 function M.PlaceholderKeybind(key)
     print("[Functions] Placeholder keybind triggered:", key)
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER TOGGLE
---------------------------------------------------------------------------------
 function M.PlaceholderToggle(state)
     print("[Functions] Placeholder toggle changed:", state)
 end
 
---------------------------------------------------------------------------------
--- PLACEHOLDER BUTTON
---------------------------------------------------------------------------------
 function M.PlaceholderButton()
     print("[Functions] Placeholder button clicked.")
 end
 
 --------------------------------------------------------------------------------
--- Expose M in getgenv().ApocFunctions
+-- STOP ALL
+--------------------------------------------------------------------------------
+function M.StopAll()
+    turnOffFly()
+    turnOffWalkSpeed()
+    turnOffNoclip()
+    -- Add any other toggles you might need
+    warn("[Functions] All features forcibly stopped.")
+end
+
+function M.disableFunctions()
+    error("[Functions] Disabling functions purposefully")
+end
+
+-- Make a table to hold references to keybind connections
+getgenv().ApocFunctions.AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
+
+-- A function to register a new keybind connection
+getgenv().ApocFunctions.RegisterKeybindConnection = function(conn)
+    table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
+end
+
+-- Edit your existing StopAll() to disconnect keybinds:
+getgenv().ApocFunctions.StopAll = function()
+    -- (Your existing code that turns off fly, noclip, etc. stays here)
+
+    -- Now disconnect all keybind connections as well:
+    for _, c in ipairs(getgenv().ApocFunctions.AllKeybindConns) do
+        c:Disconnect()
+    end
+    -- Clear the table so reusing is possible only if script is re-run
+    getgenv().ApocFunctions.AllKeybindConns = {}
+
+    warn("[ApocFunctions] All features forcibly stopped, keybinds disconnected.")
+end
+
+
 --------------------------------------------------------------------------------
 for k,v in pairs(M) do
     getgenv().ApocFunctions[k] = v
