@@ -38,19 +38,19 @@ print("New UI Identifier = ", getgenv().UIIdentifier)
 
 -- If ApocFunctions not loaded, load it (the newly updated Functions.lua)
 if not getgenv().ApocFunctions or not next(getgenv().ApocFunctions) then
-    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/.../Functions.lua"))()
+    getgenv().ApocFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/Functions.lua"))()
 end
 
 -- If UILib not loaded, load it
 if not getgenv().UILib or not next(getgenv().UILib) then
-    getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/.../UI.lua"))()
+    getgenv().UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Keronos-RBX/RobuxFarm-Apoc/refs/heads/main/UI.lua"))()
 end
 
 -- Create the main window using your UI library
 local Window = UILib.new("Apocrypha Cheat", LocalPlayer.UserId, "Buyer")
 
 -- Provide a "DestroyUI" method so we can shut down *this* new environment if needed
-function getgenv().UILib.DestroyUI(ignoreDestroy)
+getgenv().UILib.DestroyUI = function(ignoreDestroy)
     -- 1) Destroy the Window object
     if Window then
         Window:Destroy()
