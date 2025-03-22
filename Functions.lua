@@ -1,16 +1,12 @@
-getgenv().ApocFunctions = getgenv().ApocFunctions or {}
+getgenv().Functions = getgenv().Functions or {}
 
-local CoreGui = game:GetService("CoreGui")
-local CurrentID = CoreGui:FindFirstChild("UI-Id"):GetAttribute("InstanceID")
-if getgenv().UIIdentifier ~= CurrentID then
-    print(CurrentID)
-    error("Mismatching instance id's, stopping function")
-end
+print("Loading v1.00 of functions - Keronos | Patch 0.000")
 
-print("Loading functions - Keronos RobuxFarm.Kero V1.00 patch 0.006")
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local Players = cloneref(game:GetService("Players"))
+local RunService = cloneref(game:GetService("RunService"))
+local UIS = cloneref(game:GetService("UserInputService"))
 local LocalPlayer = Players.LocalPlayer
 
 --------------------------------------------------------------------------------
@@ -26,7 +22,7 @@ end
 -- Global toggles and speeds
 --------------------------------------------------------------------------------
 local FLYING = false
-local QEfly = true           -- Allows Q/E vertical movement
+local QEfly = false          -- Allows Q/E vertical movement
 local iyflyspeed = 1         -- Default Fly speed
 local vehicleflyspeed = 1
 
@@ -54,13 +50,13 @@ local function enableWalkSpeed(speed)
     walkSpeedEnabled = true
     desiredWalkSpeed = speed or 16
     setHumanoidSpeed(desiredWalkSpeed)
-    print("[Functions] WalkSpeed toggled ON (speed:", desiredWalkSpeed, ")")
+    --print("[Functions] WalkSpeed toggled ON (speed:", desiredWalkSpeed, ")")
 end
 
 local function disableWalkSpeed()
     walkSpeedEnabled = false
     setHumanoidSpeed(defaultWalkSpeed)
-    print("[Functions] WalkSpeed toggled OFF (back to default speed).")
+    --print("[Functions] WalkSpeed toggled OFF (back to default speed).")
 end
 
 --------------------------------------------------------------------------------
@@ -239,16 +235,16 @@ end
 function M.SetFlySpeed(newSpeed)
     local num = tonumber(newSpeed) or 1
     iyflyspeed = num
-    print("[Functions] Fly speed set to:", num)
+    --print("[Functions] Fly speed set to:", num)
 end
 
 function M.FlyToggle()
     if FLYING then
         NOFLY()
-        print("[Functions] Fly disabled.")
+        --print("[Functions] Fly disabled.")
     else
         sFLY(false)
-        print("[Functions] Fly enabled (speed multiplier:", iyflyspeed, ").")
+        --print("[Functions] Fly enabled (speed multiplier:", iyflyspeed, ").")
     end
 end
 
@@ -268,7 +264,7 @@ local function StartNoclip()
             end
         end
     end)
-    print("[Functions] Noclip Enabled.")
+    --print("[Functions] Noclip Enabled.")
 end
 
 local function StopNoclip()
@@ -285,7 +281,7 @@ local function StopNoclip()
             end
         end
     end
-    print("[Functions] Noclip Disabled.")
+    --print("[Functions] Noclip Disabled.")
 end
 
 function M.NoclipToggle()
@@ -303,7 +299,7 @@ function M.TeleportToCoordinates(vec3)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         char.HumanoidRootPart.CFrame = CFrame.new(vec3)
-        print("[Functions] Teleported to:", vec3)
+        --print("[Functions] Teleported to:", vec3)
     else
         warn("[Functions] Unable to teleport (no character or root).")
     end
@@ -319,7 +315,7 @@ function M.TeleportToPlayer(playerName)
         if localChar and localChar:FindFirstChild("HumanoidRootPart") then
             localChar.HumanoidRootPart.CFrame =
                 targetPlr.Character.HumanoidRootPart.CFrame
-            print("[Functions] Teleported to player:", playerName)
+            --print("[Functions] Teleported to player:", playerName)
         end
     else
         warn("[Functions] Could not find that player’s root part.")
@@ -336,7 +332,7 @@ function M.FixBrokenLeg()
     if hum then
         hum:ChangeState(Enum.HumanoidStateType.GettingUp)
         hum.Health = hum.MaxHealth
-        print("[Functions] Broken leg fixed (example).")
+        --print("[Functions] Broken leg fixed (example).")
     end
 end
 
@@ -346,7 +342,7 @@ function M.RagdollSelf()
         local hum = char:FindFirstChildOfClass("Humanoid")
         if hum then
             hum:ChangeState(Enum.HumanoidStateType.Physics)
-            print("[Functions] Character ragdolled.")
+            --print("[Functions] Character ragdolled.")
         end
     end
 end
@@ -357,64 +353,43 @@ function M.DamageSelf(amount)
         local hum = char:FindFirstChildOfClass("Humanoid")
         if hum then
             hum:TakeDamage(amount)
-            print("[Functions] Damaged self by:", amount)
+            --print("[Functions] Damaged self by:", amount)
         end
     end
 end
 
 function M.PlaceholderKeybind(key)
-    print("[Functions] Placeholder keybind triggered:", key)
+    --print("[Functions] Placeholder keybind triggered:", key)
 end
 
 function M.PlaceholderToggle(state)
-    print("[Functions] Placeholder toggle changed:", state)
+    --print("[Functions] Placeholder toggle changed:", state)
 end
 
 function M.PlaceholderButton()
-    print("[Functions] Placeholder button clicked.")
+    --print("[Functions] Placeholder button clicked.")
 end
 
 --------------------------------------------------------------------------------
 -- STOP ALL
 --------------------------------------------------------------------------------
-function M.StopAll()
+local function NuclearDisconnect()
+    for _, event in ipairs({ UIS.InputBegan, UIS.InputEnded, UIS.InputChanged }) do
+        for _, connection in ipairs(getconnections(event)) do
+            connection:Disconnect() -- Kill all connections
+        end
+    end
+end
+getgenv().StopAll = function()
     turnOffFly()
     turnOffWalkSpeed()
     turnOffNoclip()
-    -- Add any other toggles you might need
-    warn("[Functions] All features forcibly stopped.")
+    NuclearDisconnect()
+    warn("[Functions] All features forcibly stopped. (WARNING: this will affect other scripts.)")
 end
-
-function M.disableFunctions()
-    error("[Functions] Disabling functions purposefully")
-end
-
--- Make a table to hold references to keybind connections
-getgenv().ApocFunctions.AllKeybindConns = getgenv().ApocFunctions.AllKeybindConns or {}
-
--- A function to register a new keybind connection
-getgenv().ApocFunctions.RegisterKeybindConnection = function(conn)
-    table.insert(getgenv().ApocFunctions.AllKeybindConns, conn)
-end
-
--- Edit your existing StopAll() to disconnect keybinds:
-getgenv().ApocFunctions.StopAll = function()
-    -- (Your existing code that turns off fly, noclip, etc. stays here)
-
-    -- Now disconnect all keybind connections as well:
-    for _, c in ipairs(getgenv().ApocFunctions.AllKeybindConns) do
-        c:Disconnect()
-    end
-    -- Clear the table so reusing is possible only if script is re-run
-    getgenv().ApocFunctions.AllKeybindConns = {}
-
-    warn("[ApocFunctions] All features forcibly stopped, keybinds disconnected.")
-end
-
-
 --------------------------------------------------------------------------------
 for k,v in pairs(M) do
-    getgenv().ApocFunctions[k] = v
+    getgenv().Functions[k] = v
 end
 
 return M
