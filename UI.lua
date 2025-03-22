@@ -3325,26 +3325,23 @@ function UILibrary.new(gameName, userId, rank)
         end
     end
     
-    function UILibrary.stopScript()
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
+    -- Somewhere near the bottom of UI.lua (UIsecond.lua) where you define UILibrary
+    function UILibrary.DestroyUI(ignoreDestroy)
+        -- Suppose your main GUI is stored in 'MainUI' or 'GUI'
+        -- e.g. a ScreenGui or Frame that is the root
+        if UILibrary.MainUI and UILibrary.MainUI.Parent then
+            UILibrary.MainUI:Destroy()
         end
-        GUI:Destroy()
-        killAll()
-        script:Destroy()
-        print("keepgoing")
-        --error("Stopping script forcefully")
+    
+        -- If you want to optionally kill the script environment:
+        if not ignoreDestroy then
+            script:Destroy()
+        end
     end
 
+
     closeButton.MouseButton1Click:Connect(function()
-        if getgenv().ApocFunctions and getgenv().ApocFunctions.StopAll then
-            getgenv().ApocFunctions.StopAll()
-        end
-        GUI:Destroy()
-        killAll()
-        script:Destroy()
-        print("keepgoing")
-        --error("UI closed and script forcibly ended.")
+        UIlibrary.DestroyUI
     end)
 
     minimizeButton.MouseButton1Click:Connect(function()
